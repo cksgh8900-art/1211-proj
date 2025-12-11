@@ -18,26 +18,110 @@
  * - components/tour-filters.tsx (Phase 2.3)
  * - components/tour-search.tsx (Phase 2.4)
  * - components/naver-map.tsx (Phase 2.5)
- * - lib/api/tour-api.ts: getAreaBasedList
+ * - lib/api/tour-api.ts: getAreaBasedList, getAreaCode
  */
 
 import { Suspense } from "react";
-import { getAreaBasedList } from "@/lib/api/tour-api";
+import { getAreaBasedList, getAreaCode } from "@/lib/api/tour-api";
+import type { TourItem } from "@/lib/types/tour";
 import { TourList } from "@/components/tour-list";
+import { TourFilters } from "@/components/tour-filters";
+
+/**
+ * 지역 목록 데이터를 가져오는 Server Component
+ */
+async function AreaCodesData() {
+  try {
+    const areaCodes = await getAreaCode({ numOfRows: 100 });
+    return <TourFilters areaCodes={areaCodes} />;
+  } catch {
+    // 지역 목록 로드 실패 시 빈 배열로 처리
+    return <TourFilters areaCodes={[]} />;
+  }
+}
 
 /**
  * 관광지 목록 데이터를 가져오는 Server Component
  */
-async function TourListData() {
+async function TourListData({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   try {
-    // 초기 데이터: 전체 지역, 전체 타입, 12개 항목
-    // areaCode와 contentTypeId를 생략하면 전체 조회
-    const tours = await getAreaBasedList({
-      numOfRows: 12,
-      pageNo: 1,
-    });
+    const params = await searchParams;
 
-    return <TourList tours={tours} />;
+    // 필터 값 파싱
+    const areaCode = params.area ? String(params.area) : undefined;
+    const typeParams = params.type;
+    const contentTypeIds = Array.isArray(typeParams)
+      ? typeParams.filter((t): t is string => typeof t === "string" && t.length > 0)
+      : typeParams
+      ? [String(typeParams)]
+      : [];
+    const sort: "latest" | "name" =
+      params.sort === "name" ? "name" : "latest";
+
+    // API 호출 (다중 타입 지원)
+    let allTours: TourItem[] = [];
+
+    if (contentTypeIds.length === 0) {
+      // 타입 필터가 없으면 전체 조회
+      allTours = await getAreaBasedList({
+        areaCode,
+        numOfRows: 12,
+        pageNo: 1,
+      });
+    } else if (contentTypeIds.length === 1) {
+      // 단일 타입 선택
+      allTours = await getAreaBasedList({
+        areaCode,
+        contentTypeId: contentTypeIds[0],
+        numOfRows: 12,
+        pageNo: 1,
+      });
+    } else {
+      // 다중 타입 선택: 각 타입별로 병렬 API 호출
+      const apiCalls = contentTypeIds.map((contentTypeId) =>
+        getAreaBasedList({
+          areaCode,
+          contentTypeId,
+          numOfRows: 12, // 각 타입별로 12개씩 가져오기
+          pageNo: 1,
+        })
+      );
+
+      const results = await Promise.all(apiCalls);
+      
+      // 결과 합치기 (중복 제거: contentid 기준)
+      const tourMap = new Map<string, TourItem>();
+      for (const tours of results) {
+        for (const tour of tours) {
+          if (!tourMap.has(tour.contentid)) {
+            tourMap.set(tour.contentid, tour);
+          }
+        }
+      }
+      allTours = Array.from(tourMap.values());
+    }
+
+    // 정렬 처리 (클라이언트 사이드)
+    const sortedTours = [...allTours];
+    if (sort === "name") {
+      sortedTours.sort((a, b) => a.title.localeCompare(b.title, "ko"));
+    } else {
+      // 최신순 (modifiedtime 내림차순)
+      sortedTours.sort(
+        (a, b) =>
+          new Date(b.modifiedtime).getTime() -
+          new Date(a.modifiedtime).getTime()
+      );
+    }
+
+    // 결과 개수 제한 (12개)
+    const limitedTours = sortedTours.slice(0, 12);
+
+    return <TourList tours={limitedTours} sort={sort} />;
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error : new Error("알 수 없는 오류");
@@ -45,7 +129,11 @@ async function TourListData() {
   }
 }
 
-export default function Home() {
+interface HomeProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function Home({ searchParams }: HomeProps) {
   return (
     <main className="flex-1">
       {/* Hero Section (선택 사항, 데스크톱만) */}
@@ -64,10 +152,9 @@ export default function Home() {
       {/* Filters & Controls (Sticky) */}
       <section className="sticky top-16 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
-          {/* Phase 2.3에서 필터 컴포넌트 추가 예정 */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            필터 및 정렬 컨트롤이 여기에 표시됩니다
-          </div>
+          <Suspense fallback={<div className="h-20" />}>
+            <AreaCodesData />
+          </Suspense>
         </div>
       </section>
 
@@ -77,7 +164,7 @@ export default function Home() {
           {/* 좌측: List View */}
           <div className="list-view">
             <Suspense fallback={<TourList loading={true} tours={[]} />}>
-              <TourListData />
+              <TourListData searchParams={searchParams} />
             </Suspense>
           </div>
 

@@ -30,6 +30,7 @@ interface TourListProps {
   error?: Error | null;
   onRetry?: () => void;
   className?: string;
+  sort?: "latest" | "name"; // 정렬 옵션 (서버에서 정렬된 경우 전달)
 }
 
 /**
