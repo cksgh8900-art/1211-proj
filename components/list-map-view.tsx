@@ -371,14 +371,21 @@ function ListMapViewInner({
   return (
     <div className="space-y-4">
       {/* 모바일 탭 전환 버튼 */}
-      <div className="flex lg:hidden gap-2 border-b">
+      <div 
+        className="flex lg:hidden gap-2 border-b"
+        role="tablist"
+        aria-label="뷰 모드 전환"
+      >
         <Button
           variant={viewMode === "list" ? "default" : "ghost"}
           size="sm"
           onClick={() => handleViewModeChange("list")}
           className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+          role="tab"
+          aria-selected={viewMode === "list"}
+          aria-controls="list-view"
         >
-          <List className="h-4 w-4 mr-2" />
+          <List className="h-4 w-4 mr-2" aria-hidden="true" />
           목록
         </Button>
         <Button
@@ -386,8 +393,11 @@ function ListMapViewInner({
           size="sm"
           onClick={() => handleViewModeChange("map")}
           className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+          role="tab"
+          aria-selected={viewMode === "map"}
+          aria-controls="map-view"
         >
-          <MapIcon className="h-4 w-4 mr-2" />
+          <MapIcon className="h-4 w-4 mr-2" aria-hidden="true" />
           지도
         </Button>
       </div>
@@ -396,11 +406,14 @@ function ListMapViewInner({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* 좌측: List View */}
         <div
+          id="list-view"
           className={cn(
             "list-view",
             viewMode === "map" && "hidden lg:block",
             viewMode === "list" && "block"
           )}
+          role="tabpanel"
+          aria-labelledby="list-tab"
         >
           <TourList
             tours={tours}
@@ -433,11 +446,14 @@ function ListMapViewInner({
 
         {/* 우측: Map View */}
         <div
+          id="map-view"
           className={cn(
             "map-view",
             viewMode === "list" && "hidden lg:block",
             viewMode === "map" && "block"
           )}
+          role="tabpanel"
+          aria-labelledby="map-tab"
         >
           <NaverMap
             tours={tours}
@@ -445,7 +461,7 @@ function ListMapViewInner({
             hoveredTourId={hoveredTourId}
             onMarkerClick={handleMarkerClick}
             onMarkerHover={handleMarkerHover}
-            className="h-[400px] lg:h-[600px]"
+            className="h-[300px] md:h-[500px] lg:h-[600px]"
           />
         </div>
       </div>

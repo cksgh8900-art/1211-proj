@@ -61,6 +61,36 @@ export class TourApiError extends Error {
 }
 
 /**
+ * API 에러 코드를 사용자 친화적인 메시지로 변환
+ */
+function getFriendlyErrorMessage(
+  errorCode: string | undefined,
+  defaultMessage: string
+): string {
+  if (!errorCode) return defaultMessage;
+
+  const errorMessages: Record<string, string> = {
+    // 한국관광공사 API 에러 코드 매핑
+    "0000": "정상 처리",
+    "0001": "서비스 점검 중입니다. 잠시 후 다시 시도해주세요.",
+    "0002": "인증키 오류입니다. 관리자에게 문의해주세요.",
+    "0003": "필수 파라미터가 누락되었습니다.",
+    "0004": "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    "0005": "데이터가 없습니다.",
+    "ERROR-300": "필수 값이 누락되었습니다.",
+    "ERROR-301": "필수 값이 누락되었습니다.",
+    "ERROR-310": "데이터베이스 연결 오류입니다. 잠시 후 다시 시도해주세요.",
+    "ERROR-331": "데이터베이스 쿼리 오류입니다. 잠시 후 다시 시도해주세요.",
+    "ERROR-336": "데이터가 없습니다.",
+    "ERROR-500": "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    "ERROR-600": "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    "ERROR-601": "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+  };
+
+  return errorMessages[errorCode] || defaultMessage;
+}
+
+/**
  * 공통 파라미터 생성 함수
  */
 function getCommonParams() {
@@ -68,7 +98,8 @@ function getCommonParams() {
 
   if (!serviceKey) {
     throw new TourApiError(
-      "NEXT_PUBLIC_TOUR_API_KEY 환경변수가 설정되지 않았습니다."
+      "API 키가 설정되지 않았습니다. 관리자에게 문의해주세요.",
+      "CONFIG_ERROR"
     );
   }
 
@@ -108,7 +139,11 @@ async function fetchWithTimeout(
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error && error.name === "AbortError") {
-      throw new TourApiError("API 요청 시간 초과", undefined, 408);
+      throw new TourApiError(
+        "요청 시간이 초과되었습니다. 네트워크 연결을 확인하고 잠시 후 다시 시도해주세요.",
+        "TIMEOUT",
+        408
+      );
     }
     throw error;
   }
@@ -153,11 +188,13 @@ async function callApiWithRetry<T>(
 
       // API 응답 에러 체크
       if (data.response.header.resultCode !== "0000") {
+        const errorCode = data.response.header.resultCode;
         const errorMsg = data.response.header.resultMsg || "알 수 없는 오류";
-        throw new TourApiError(
-          `API 오류: ${errorMsg}`,
-          data.response.header.resultCode
+        const friendlyMessage = getFriendlyErrorMessage(
+          errorCode,
+          `API 오류: ${errorMsg}`
         );
+        throw new TourApiError(friendlyMessage, errorCode);
       }
 
       // 응답이 TourApiResponse인 경우 items 추출
@@ -235,11 +272,13 @@ async function callApiWithRetryAndCount<T>(
 
       // API 응답 에러 체크
       if (data.response.header.resultCode !== "0000") {
+        const errorCode = data.response.header.resultCode;
         const errorMsg = data.response.header.resultMsg || "알 수 없는 오류";
-        throw new TourApiError(
-          `API 오류: ${errorMsg}`,
-          data.response.header.resultCode
+        const friendlyMessage = getFriendlyErrorMessage(
+          errorCode,
+          `API 오류: ${errorMsg}`
         );
+        throw new TourApiError(friendlyMessage, errorCode);
       }
 
       // 응답이 TourApiResponse인 경우 items와 totalCount 추출

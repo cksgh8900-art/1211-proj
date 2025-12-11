@@ -22,6 +22,7 @@ import { convertKATECToWGS84, calculateCenter } from "@/lib/utils/coordinate";
 import { cn } from "@/lib/utils";
 import { MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ErrorMessage } from "@/components/ui/error";
 
 interface NaverMapProps {
   tours: TourItem[];
@@ -168,22 +169,35 @@ export function NaverMap({
       if (typeof window !== "undefined" && window.naver?.maps) {
         setIsLoaded(true);
         setError(null);
-      } else {
-        // 스크립트 로드를 기다림
-        const timer = setTimeout(() => {
-          if (!window.naver?.maps) {
-            setError("Naver Maps API를 불러올 수 없습니다.");
-          }
-        }, 5000); // 5초 대기
-
-        return () => clearTimeout(timer);
       }
     };
+
+    // 환경변수 확인
+    const ncpKeyId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
+    if (!ncpKeyId) {
+      setError(
+        "네이버 지도 API 키가 설정되지 않았습니다. 관리자에게 문의해주세요."
+      );
+      return;
+    }
 
     checkNaverMaps();
     const interval = setInterval(checkNaverMaps, 100);
 
-    return () => clearInterval(interval);
+    // 5초 후에도 로드되지 않으면 에러 표시
+    const timeout = setTimeout(() => {
+      if (!window.naver?.maps) {
+        setError(
+          "네이버 지도를 불러올 수 없습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요."
+        );
+        clearInterval(interval);
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
   }, []);
 
   // 지도 초기화
@@ -228,7 +242,9 @@ export function NaverMap({
       }
     } catch (err) {
       console.error("Failed to initialize map:", err);
-      setError("지도를 초기화할 수 없습니다.");
+      setError(
+        "지도를 초기화할 수 없습니다. 페이지를 새로고침하거나 잠시 후 다시 시도해주세요."
+      );
     }
   }, [isLoaded, tours]);
 
@@ -485,27 +501,31 @@ export function NaverMap({
     return (
       <div
         className={cn(
-          "flex items-center justify-center rounded-lg border border-destructive/50 bg-destructive/10",
+          "flex items-center justify-center rounded-lg border",
           className
         )}
         style={{ minHeight: "400px" }}
       >
-        <div className="text-center p-4">
-          <p className="text-sm font-medium text-destructive mb-2">{error}</p>
-          <p className="text-xs text-muted-foreground">
-            환경변수 NEXT_PUBLIC_NAVER_MAP_CLIENT_ID를 확인해주세요.
-          </p>
-        </div>
+        <ErrorMessage
+          message={error}
+          type="general"
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }
 
   return (
-    <div className={cn("relative rounded-lg overflow-hidden", className)}>
+    <div 
+      className={cn("relative rounded-lg overflow-hidden", className)}
+      role="application"
+      aria-label="관광지 지도"
+    >
       <div
         ref={mapRef}
         className="w-full"
         style={{ minHeight: "400px", height: "100%" }}
+        aria-label="네이버 지도"
       />
       {/* 현재 위치 버튼 */}
       {isLoaded && mapInstanceRef.current && (

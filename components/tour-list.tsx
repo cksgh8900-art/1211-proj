@@ -180,6 +180,7 @@ export function TourList({
           }
           type="api"
           onRetry={onRetry || defaultOnRetry}
+          autoDetectOffline={true}
         />
       </div>
     );
@@ -198,7 +199,9 @@ export function TourList({
   return (
     <div className={className}>
       {searchKeyword && (
-        <SearchResultHeader keyword={searchKeyword} count={tours.length} />
+        <div role="status" aria-live="polite" aria-atomic="true">
+          <SearchResultHeader keyword={searchKeyword} count={tours.length} />
+        </div>
       )}
       <div
         className={cn(
@@ -223,12 +226,22 @@ export function TourList({
         <div
           ref={observerTargetRef}
           className="flex items-center justify-center py-8"
+          role="status"
+          aria-live="polite"
           aria-label="더 많은 항목 로드 중"
         >
           {isLoadingMore && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>더 많은 관광지를 불러오는 중...</span>
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 
+                  className="h-5 w-5 animate-spin text-primary" 
+                  aria-hidden="true"
+                />
+                <span className="font-medium">더 많은 관광지를 불러오는 중...</span>
+              </div>
+              <div className="w-48 h-1 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full animate-pulse w-1/3" />
+              </div>
             </div>
           )}
         </div>
@@ -236,8 +249,13 @@ export function TourList({
 
       {/* 무한 스크롤: 더 이상 항목이 없을 때 */}
       {paginationMode === "infinite" && !hasMore && tours.length > 0 && (
-        <div className="flex items-center justify-center py-8">
-          <p className="text-sm text-muted-foreground">
+        <div 
+          className="flex items-center justify-center py-8"
+          role="status"
+          aria-live="polite"
+        >
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <span className="text-primary">✓</span>
             모든 관광지를 불러왔습니다.
           </p>
         </div>
@@ -250,6 +268,7 @@ export function TourList({
             message={error.message || "데이터를 불러오는 중 오류가 발생했습니다."}
             type="api"
             onRetry={onRetry || defaultOnRetry}
+            autoDetectOffline={true}
           />
         </div>
       )}

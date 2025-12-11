@@ -3,6 +3,7 @@
 import { AlertCircle, RefreshCw, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface ErrorMessageProps {
   title?: string;
@@ -10,6 +11,7 @@ interface ErrorMessageProps {
   type?: "api" | "network" | "general";
   onRetry?: () => void;
   className?: string;
+  autoDetectOffline?: boolean; // 오프라인 자동 감지 여부
 }
 
 const errorConfig = {
@@ -36,8 +38,34 @@ export function ErrorMessage({
   type = "general",
   onRetry,
   className,
+  autoDetectOffline = false,
 }: ErrorMessageProps) {
-  const config = errorConfig[type];
+  const [isOffline, setIsOffline] = useState(false);
+
+  // 오프라인 감지 (autoDetectOffline이 true일 때만)
+  useEffect(() => {
+    if (!autoDetectOffline) return;
+
+    const updateOnlineStatus = () => {
+      setIsOffline(!navigator.onLine);
+    };
+
+    // 초기 상태 확인
+    updateOnlineStatus();
+
+    // 이벤트 리스너 등록
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
+
+    return () => {
+      window.removeEventListener("online", updateOnlineStatus);
+      window.removeEventListener("offline", updateOnlineStatus);
+    };
+  }, [autoDetectOffline]);
+
+  // 오프라인 감지 시 타입을 network로 변경
+  const actualType = autoDetectOffline && isOffline ? "network" : type;
+  const config = errorConfig[actualType];
   const Icon = config.icon;
   const displayTitle = title || config.defaultTitle;
   const displayMessage = message || config.defaultMessage;

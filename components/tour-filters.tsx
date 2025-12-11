@@ -139,11 +139,15 @@ export function TourFilters({ areaCodes, className }: TourFiltersProps) {
     currentTypes.length === 0 || currentTypes.length === CONTENT_TYPES.length;
 
   return (
-    <div className={cn("flex flex-col gap-4", className)}>
+    <div 
+      className={cn("flex flex-col gap-4", className)}
+      role="region"
+      aria-label="관광지 필터"
+    >
       {/* 필터 제목 및 초기화 버튼 */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Filter className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <h2 className="text-sm font-medium">필터</h2>
         </div>
         {(currentArea || currentTypes.length > 0 || currentSort !== "latest") && (
@@ -151,7 +155,8 @@ export function TourFilters({ areaCodes, className }: TourFiltersProps) {
             variant="ghost"
             size="sm"
             onClick={handleReset}
-            className="h-7 text-xs"
+            className="h-7 text-xs shrink-0"
+            aria-label="필터 초기화"
           >
             초기화
           </Button>
@@ -159,15 +164,22 @@ export function TourFilters({ areaCodes, className }: TourFiltersProps) {
       </div>
 
       {/* 필터 컨트롤 */}
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-3 flex-wrap">
         {/* 지역 필터 */}
-        <div className="flex-1 min-w-[150px]">
-          <label className="text-xs text-muted-foreground mb-1.5 block">
+        <div className="flex-1 min-w-[150px] sm:min-w-[180px]">
+          <label 
+            htmlFor="area-filter"
+            className="text-xs text-muted-foreground mb-1.5 block"
+          >
             지역
           </label>
           <Select value={currentArea || "all"} onValueChange={handleAreaChange}>
-            <SelectTrigger className="w-full">
-              <MapPin className="mr-2 h-4 w-4" />
+            <SelectTrigger 
+              id="area-filter"
+              className="w-full"
+              aria-label="지역 선택"
+            >
+              <MapPin className="mr-2 h-4 w-4" aria-hidden="true" />
               <SelectValue placeholder="전체 지역" />
             </SelectTrigger>
             <SelectContent>
@@ -182,11 +194,18 @@ export function TourFilters({ areaCodes, className }: TourFiltersProps) {
         </div>
 
         {/* 관광 타입 필터 */}
-        <div className="flex-1 min-w-[200px]">
-          <label className="text-xs text-muted-foreground mb-1.5 block">
+        <div className="flex-1 min-w-full sm:min-w-[200px]">
+          <label 
+            className="text-xs text-muted-foreground mb-1.5 block"
+            id="type-filter-label"
+          >
             관광 타입
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div 
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-labelledby="type-filter-label"
+          >
             {CONTENT_TYPES.map((type) => {
               const isSelected = currentTypes.includes(type.id);
               return (
@@ -196,6 +215,8 @@ export function TourFilters({ areaCodes, className }: TourFiltersProps) {
                   size="sm"
                   onClick={() => handleTypeToggle(type.id)}
                   className="h-8 text-xs"
+                  aria-pressed={isSelected}
+                  aria-label={`${type.name} ${isSelected ? '선택됨' : '선택 안됨'}`}
                 >
                   {type.name}
                 </Button>
@@ -210,13 +231,20 @@ export function TourFilters({ areaCodes, className }: TourFiltersProps) {
         </div>
 
         {/* 정렬 옵션 */}
-        <div className="flex-1 min-w-[150px]">
-          <label className="text-xs text-muted-foreground mb-1.5 block">
+        <div className="flex-1 min-w-[150px] sm:min-w-[180px]">
+          <label 
+            htmlFor="sort-filter"
+            className="text-xs text-muted-foreground mb-1.5 block"
+          >
             정렬
           </label>
           <Select value={currentSort} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-full">
-              <ArrowUpDown className="mr-2 h-4 w-4" />
+            <SelectTrigger 
+              id="sort-filter"
+              className="w-full"
+              aria-label="정렬 옵션 선택"
+            >
+              <ArrowUpDown className="mr-2 h-4 w-4" aria-hidden="true" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -26,6 +26,44 @@ import { getAreaBasedList, getAreaCode, searchKeyword } from "@/lib/api/tour-api
 import type { TourItem } from "@/lib/types/tour";
 import { TourFilters } from "@/components/tour-filters";
 import { ListMapView } from "@/components/list-map-view";
+import { Skeleton } from "@/components/ui/skeleton";
+
+/**
+ * 필터 영역 로딩 Skeleton UI
+ */
+function FiltersSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-3 flex-wrap">
+        {/* 지역 필터 Skeleton */}
+        <div className="flex-1 min-w-[150px] sm:min-w-[180px]">
+          <Skeleton className="h-3 w-12 mb-1.5" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        {/* 관광 타입 필터 Skeleton */}
+        <div className="flex-1 min-w-full sm:min-w-[200px]">
+          <Skeleton className="h-3 w-16 mb-1.5" />
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-16" />
+            ))}
+          </div>
+        </div>
+        {/* 정렬 필터 Skeleton */}
+        <div className="flex-1 min-w-[150px] sm:min-w-[180px]">
+          <Skeleton className="h-3 w-12 mb-1.5" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * 지역 목록 데이터를 가져오는 Server Component
@@ -232,7 +270,7 @@ export default async function Home({ searchParams }: HomeProps) {
       {/* Filters & Controls (Sticky) */}
       <section className="sticky top-16 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
-          <Suspense fallback={<div className="h-20" />}>
+          <Suspense fallback={<FiltersSkeleton />}>
             <AreaCodesData />
           </Suspense>
         </div>
