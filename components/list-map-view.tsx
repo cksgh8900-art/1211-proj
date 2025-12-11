@@ -13,14 +13,19 @@
  * - components/tour-list.tsx
  */
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { TourItem } from "@/lib/types/tour";
 import { NaverMap } from "./naver-map";
 import { TourList } from "./tour-list";
+import { TourPagination, type PaginationMode } from "./tour-pagination";
 import { Button } from "./ui/button";
 import { List, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  getToursByArea,
+  searchToursByKeyword,
+} from "@/actions/tours";
 
 interface ListMapViewProps {
   tours: TourItem[];
@@ -28,6 +33,8 @@ interface ListMapViewProps {
   error?: Error | null;
   searchKeyword?: string;
   sort?: "latest" | "name";
+  totalCount?: number;
+  currentPage?: number;
 }
 
 type ViewMode = "list" | "map";
@@ -36,21 +43,62 @@ type ViewMode = "list" | "map";
  * 리스트와 지도를 함께 표시하는 컴포넌트 (내부 구현)
  */
 function ListMapViewInner({
-  tours,
+  tours: initialTours,
   loading = false,
   error = null,
   searchKeyword,
   sort,
+  totalCount: initialTotalCount = 0,
+  currentPage: initialPage = 1,
 }: ListMapViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedTourId, setSelectedTourId] = useState<string | null>(null);
   const [hoveredTourId, setHoveredTourId] = useState<string | null>(null);
+  const [tours, setTours] = useState<TourItem[]>(initialTours);
+  const [totalCount, setTotalCount] = useState(initialTotalCount);
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<Error | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     // URL에서 view 파라미터 읽기 (모바일용)
     const view = searchParams.get("view");
     return (view === "map" ? "map" : "list") as ViewMode;
   });
+  const [paginationMode, setPaginationMode] = useState<PaginationMode>(() => {
+    // URL에서 pagination mode 파라미터 읽기 (기본값: infinite)
+    const mode = searchParams.get("paginationMode");
+    return (mode === "pagination" ? "pagination" : "infinite");
+  });
+
+  // URL의 page 파라미터 읽기
+  useEffect(() => {
+    const page = searchParams.get("page");
+    if (page) {
+      const pageNum = parseInt(page, 10);
+      if (!isNaN(pageNum) && pageNum > 0) {
+        setCurrentPage(pageNum);
+      }
+    } else {
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
+
+  // URL의 paginationMode 파라미터 읽기
+  useEffect(() => {
+    const mode = searchParams.get("paginationMode");
+    setPaginationMode(
+      mode === "pagination" ? "pagination" : "infinite"
+    );
+  }, [searchParams]);
+
+  // 초기 데이터 업데이트 (필터/검색 변경 시)
+  useEffect(() => {
+    setTours(initialTours);
+    setTotalCount(initialTotalCount);
+    setCurrentPage(initialPage);
+    setLoadMoreError(null);
+  }, [initialTours, initialTotalCount, initialPage]);
 
   // URL의 view 파라미터와 동기화
   useEffect(() => {
@@ -124,6 +172,202 @@ function ListMapViewInner({
     router.push(`/?${params.toString()}`, { scroll: false });
   };
 
+  /**
+   * 무한 스크롤: 더 많은 데이터 로드
+   */
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore) return;
+
+    setIsLoadingMore(true);
+    setLoadMoreError(null);
+
+    try {
+      // 현재 필터/검색 파라미터 읽기
+      const areaCode = searchParams.get("area") || undefined;
+      const typeParams = searchParams.getAll("type");
+      const contentTypeIds = typeParams.length > 0 ? typeParams : [];
+      const keyword = searchParams.get("keyword") || undefined;
+      const nextPage = currentPage + 1;
+
+      let newTours: TourItem[] = [];
+      let newTotalCount = 0;
+
+      if (keyword && keyword.trim().length > 0) {
+        // 검색 모드
+        if (contentTypeIds.length === 0) {
+          const result = await searchToursByKeyword({
+            keyword,
+            areaCode,
+            numOfRows: 12,
+            pageNo: nextPage,
+          });
+          newTours = result.items;
+          newTotalCount = result.totalCount;
+        } else if (contentTypeIds.length === 1) {
+          const result = await searchToursByKeyword({
+            keyword,
+            areaCode,
+            contentTypeId: contentTypeIds[0],
+            numOfRows: 12,
+            pageNo: nextPage,
+          });
+          newTours = result.items;
+          newTotalCount = result.totalCount;
+        } else {
+          // 다중 타입: 각 타입별로 병렬 호출
+          const results = await Promise.all(
+            contentTypeIds.map((contentTypeId) =>
+              searchToursByKeyword({
+                keyword,
+                areaCode,
+                contentTypeId,
+                numOfRows: 12,
+                pageNo: 1, // 다중 타입일 때는 각 타입별 첫 페이지만
+              })
+            )
+          );
+
+          const tourMap = new Map<string, TourItem>();
+          for (const result of results) {
+            for (const tour of result.items) {
+              if (!tourMap.has(tour.contentid)) {
+                tourMap.set(tour.contentid, tour);
+              }
+            }
+            if (newTotalCount === 0) {
+              newTotalCount = result.totalCount;
+            }
+          }
+          newTours = Array.from(tourMap.values());
+        }
+      } else {
+        // 목록 모드
+        if (contentTypeIds.length === 0) {
+          const result = await getToursByArea({
+            areaCode,
+            numOfRows: 12,
+            pageNo: nextPage,
+          });
+          newTours = result.items;
+          newTotalCount = result.totalCount;
+        } else if (contentTypeIds.length === 1) {
+          const result = await getToursByArea({
+            areaCode,
+            contentTypeId: contentTypeIds[0],
+            numOfRows: 12,
+            pageNo: nextPage,
+          });
+          newTours = result.items;
+          newTotalCount = result.totalCount;
+        } else {
+          // 다중 타입: 각 타입별로 병렬 호출
+          const results = await Promise.all(
+            contentTypeIds.map((contentTypeId) =>
+              getToursByArea({
+                areaCode,
+                contentTypeId,
+                numOfRows: 12,
+                pageNo: 1, // 다중 타입일 때는 각 타입별 첫 페이지만
+              })
+            )
+          );
+
+          const tourMap = new Map<string, TourItem>();
+          for (const result of results) {
+            for (const tour of result.items) {
+              if (!tourMap.has(tour.contentid)) {
+                tourMap.set(tour.contentid, tour);
+              }
+            }
+            if (newTotalCount === 0) {
+              newTotalCount = result.totalCount;
+            }
+          }
+          newTours = Array.from(tourMap.values());
+        }
+      }
+
+      // 정렬 처리
+      let sortedNewTours = [...newTours];
+      if (contentTypeIds.length <= 1) {
+        if (sort === "name") {
+          sortedNewTours.sort((a, b) =>
+            a.title.localeCompare(b.title, "ko")
+          );
+        } else {
+          sortedNewTours.sort(
+            (a, b) =>
+              new Date(b.modifiedtime).getTime() -
+              new Date(a.modifiedtime).getTime()
+          );
+        }
+      }
+
+      // 기존 목록에 추가 (중복 제거)
+      const existingIds = new Set(tours.map((t) => t.contentid));
+      const uniqueNewTours = sortedNewTours.filter(
+        (t) => !existingIds.has(t.contentid)
+      );
+
+      setTours((prev) => [...prev, ...uniqueNewTours]);
+      setTotalCount(newTotalCount);
+      setCurrentPage(nextPage);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err : new Error("데이터를 불러오는 중 오류가 발생했습니다.");
+      setLoadMoreError(errorMessage);
+      console.error("Failed to load more tours:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [
+    isLoadingMore,
+    currentPage,
+    searchParams,
+    sort,
+    tours,
+  ]);
+
+  /**
+   * 페이지 번호 방식: 페이지 변경
+   */
+  const handlePageChange = useCallback(
+    (page: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (page === 1) {
+        params.delete("page");
+      } else {
+        params.set("page", String(page));
+      }
+      router.push(`/?${params.toString()}`, { scroll: false });
+      // 페이지가 변경되면 상단으로 스크롤
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [searchParams, router]
+  );
+
+  /**
+   * 페이지네이션 모드 전환
+   */
+  const handlePaginationModeChange = useCallback(
+    (mode: PaginationMode) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (mode === "infinite") {
+        params.delete("paginationMode");
+        params.delete("page"); // 무한 스크롤 모드로 전환 시 페이지 리셋
+      } else {
+        params.set("paginationMode", "pagination");
+      }
+      router.push(`/?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router]
+  );
+
+  // 페이지당 항목 수 (고정)
+  const itemsPerPage = 12;
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const hasMore = currentPage < totalPages;
+
   return (
     <div className="space-y-4">
       {/* 모바일 탭 전환 버튼 */}
@@ -161,13 +405,30 @@ function ListMapViewInner({
           <TourList
             tours={tours}
             loading={loading}
-            error={error}
+            error={error || loadMoreError}
             searchKeyword={searchKeyword}
             sort={sort}
             selectedTourId={selectedTourId}
             onTourClick={handleTourClick}
             onTourHover={handleTourHover}
+            paginationMode={paginationMode}
+            hasMore={hasMore}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={paginationMode === "infinite" ? handleLoadMore : undefined}
           />
+
+          {/* 페이지네이션 컴포넌트 */}
+          {!loading && !error && tours.length > 0 && (
+            <TourPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              hasMore={hasMore}
+              isLoading={isLoadingMore}
+              onPageChange={handlePageChange}
+              mode={paginationMode}
+              onModeChange={handlePaginationModeChange}
+            />
+          )}
         </div>
 
         {/* 우측: Map View */}

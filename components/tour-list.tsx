@@ -9,6 +9,7 @@
  * 2. 로딩 상태 (Skeleton UI)
  * 3. 빈 상태 처리
  * 4. 에러 처리
+ * 5. 무한 스크롤 (Intersection Observer)
  *
  * @dependencies
  * - components/tour-card.tsx: TourCard 컴포넌트
@@ -17,11 +18,12 @@
  * - lib/types/tour.ts: TourItem 타입
  */
 
+import { useEffect, useRef } from "react";
 import type { TourItem } from "@/lib/types/tour";
 import { TourCard } from "./tour-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorMessage } from "@/components/ui/error";
-import { MapPin } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TourListProps {
@@ -35,6 +37,11 @@ interface TourListProps {
   selectedTourId?: string | null;
   onTourClick?: (tour: TourItem) => void;
   onTourHover?: (tour: TourItem | null) => void;
+  // 페이지네이션 관련 props
+  paginationMode?: "infinite" | "pagination";
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 /**
@@ -117,7 +124,42 @@ export function TourList({
   selectedTourId,
   onTourClick,
   onTourHover,
+  paginationMode = "infinite",
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: TourListProps) {
+  const observerTargetRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer를 사용한 무한 스크롤
+  useEffect(() => {
+    if (paginationMode !== "infinite" || !hasMore || isLoadingMore || !onLoadMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          onLoadMore();
+        }
+      },
+      {
+        threshold: 0.1, // 10% 보이면 트리거
+        rootMargin: "100px", // 뷰포트 아래 100px 지점에서 미리 로드
+      }
+    );
+
+    const target = observerTargetRef.current;
+    if (target) {
+      observer.observe(target);
+    }
+
+    return () => {
+      if (target) {
+        observer.unobserve(target);
+      }
+    };
+  }, [paginationMode, hasMore, isLoadingMore, onLoadMore]);
   // 로딩 상태
   if (loading) {
     return (
@@ -175,6 +217,42 @@ export function TourList({
           />
         ))}
       </div>
+
+      {/* 무한 스크롤 감지 영역 */}
+      {paginationMode === "infinite" && hasMore && (
+        <div
+          ref={observerTargetRef}
+          className="flex items-center justify-center py-8"
+          aria-label="더 많은 항목 로드 중"
+        >
+          {isLoadingMore && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>더 많은 관광지를 불러오는 중...</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 무한 스크롤: 더 이상 항목이 없을 때 */}
+      {paginationMode === "infinite" && !hasMore && tours.length > 0 && (
+        <div className="flex items-center justify-center py-8">
+          <p className="text-sm text-muted-foreground">
+            모든 관광지를 불러왔습니다.
+          </p>
+        </div>
+      )}
+
+      {/* 에러 메시지 (추가 로드 실패 시) */}
+      {error && (
+        <div className="mt-4">
+          <ErrorMessage
+            message={error.message || "데이터를 불러오는 중 오류가 발생했습니다."}
+            type="api"
+            onRetry={onRetry || defaultOnRetry}
+          />
+        </div>
+      )}
     </div>
   );
 }

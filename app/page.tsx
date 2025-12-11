@@ -65,28 +65,37 @@ async function TourListData({
     const sort: "latest" | "name" =
       params.sort === "name" ? "name" : "latest";
 
+    // 페이지 번호 파싱
+    const pageNo = params.page ? parseInt(String(params.page), 10) : 1;
+    const validPageNo = pageNo > 0 ? pageNo : 1;
+
     // API 호출 (검색 또는 목록 조회)
     let allTours: TourItem[] = [];
+    let totalCount = 0;
 
     if (keyword && keyword.length > 0) {
       // 검색 모드: searchKeyword API 호출
       if (contentTypeIds.length === 0) {
         // 타입 필터가 없으면 검색만
-        allTours = await searchKeyword({
+        const result = await searchKeyword({
           keyword,
           areaCode,
           numOfRows: 12,
-          pageNo: 1,
+          pageNo: validPageNo,
         });
+        allTours = result.items;
+        totalCount = result.totalCount;
       } else if (contentTypeIds.length === 1) {
         // 단일 타입 필터 + 검색
-        allTours = await searchKeyword({
+        const result = await searchKeyword({
           keyword,
           areaCode,
           contentTypeId: contentTypeIds[0],
           numOfRows: 12,
-          pageNo: 1,
+          pageNo: validPageNo,
         });
+        allTours = result.items;
+        totalCount = result.totalCount;
       } else {
         // 다중 타입 필터 + 검색: 각 타입별로 병렬 API 호출
         const apiCalls = contentTypeIds.map((contentTypeId) =>
@@ -95,7 +104,7 @@ async function TourListData({
             areaCode,
             contentTypeId,
             numOfRows: 12,
-            pageNo: 1,
+            pageNo: 1, // 다중 타입일 때는 각 타입별로 첫 페이지만
           })
         );
 
@@ -103,11 +112,15 @@ async function TourListData({
         
         // 결과 합치기 (중복 제거: contentid 기준)
         const tourMap = new Map<string, TourItem>();
-        for (const tours of results) {
-          for (const tour of tours) {
+        for (const result of results) {
+          for (const tour of result.items) {
             if (!tourMap.has(tour.contentid)) {
               tourMap.set(tour.contentid, tour);
             }
+          }
+          // totalCount는 첫 번째 결과의 것을 사용 (정확하지 않지만 근사치)
+          if (totalCount === 0) {
+            totalCount = result.totalCount;
           }
         }
         allTours = Array.from(tourMap.values());
@@ -116,19 +129,23 @@ async function TourListData({
       // 목록 모드: getAreaBasedList API 호출 (기존 로직)
       if (contentTypeIds.length === 0) {
         // 타입 필터가 없으면 전체 조회
-        allTours = await getAreaBasedList({
+        const result = await getAreaBasedList({
           areaCode,
           numOfRows: 12,
-          pageNo: 1,
+          pageNo: validPageNo,
         });
+        allTours = result.items;
+        totalCount = result.totalCount;
       } else if (contentTypeIds.length === 1) {
         // 단일 타입 선택
-        allTours = await getAreaBasedList({
+        const result = await getAreaBasedList({
           areaCode,
           contentTypeId: contentTypeIds[0],
           numOfRows: 12,
-          pageNo: 1,
+          pageNo: validPageNo,
         });
+        allTours = result.items;
+        totalCount = result.totalCount;
       } else {
         // 다중 타입 선택: 각 타입별로 병렬 API 호출
         const apiCalls = contentTypeIds.map((contentTypeId) =>
@@ -136,7 +153,7 @@ async function TourListData({
             areaCode,
             contentTypeId,
             numOfRows: 12, // 각 타입별로 12개씩 가져오기
-            pageNo: 1,
+            pageNo: 1, // 다중 타입일 때는 각 타입별로 첫 페이지만
           })
         );
 
@@ -144,11 +161,15 @@ async function TourListData({
         
         // 결과 합치기 (중복 제거: contentid 기준)
         const tourMap = new Map<string, TourItem>();
-        for (const tours of results) {
-          for (const tour of tours) {
+        for (const result of results) {
+          for (const tour of result.items) {
             if (!tourMap.has(tour.contentid)) {
               tourMap.set(tour.contentid, tour);
             }
+          }
+          // totalCount는 첫 번째 결과의 것을 사용 (정확하지 않지만 근사치)
+          if (totalCount === 0) {
+            totalCount = result.totalCount;
           }
         }
         allTours = Array.from(tourMap.values());
@@ -156,24 +177,27 @@ async function TourListData({
     }
 
     // 정렬 처리 (클라이언트 사이드)
-    const sortedTours = [...allTours];
-    if (sort === "name") {
-      sortedTours.sort((a, b) => a.title.localeCompare(b.title, "ko"));
-    } else {
-      // 최신순 (modifiedtime 내림차순)
-      sortedTours.sort(
-        (a, b) =>
-          new Date(b.modifiedtime).getTime() -
-          new Date(a.modifiedtime).getTime()
-      );
+    // 다중 타입 필터가 아닌 경우에만 정렬 (다중 타입은 이미 정렬된 상태로 합쳐짐)
+    let sortedTours = [...allTours];
+    if (contentTypeIds.length <= 1) {
+      if (sort === "name") {
+        sortedTours.sort((a, b) => a.title.localeCompare(b.title, "ko"));
+      } else {
+        // 최신순 (modifiedtime 내림차순)
+        sortedTours.sort(
+          (a, b) =>
+            new Date(b.modifiedtime).getTime() -
+            new Date(a.modifiedtime).getTime()
+        );
+      }
     }
 
-    // 결과 개수 제한 (12개)
-    const limitedTours = sortedTours.slice(0, 12);
-
+    // API에서 이미 페이지당 12개로 제한되어 반환됨
     return (
       <ListMapView
-        tours={limitedTours}
+        tours={sortedTours}
+        totalCount={totalCount}
+        currentPage={validPageNo}
         sort={sort}
         searchKeyword={keyword}
       />

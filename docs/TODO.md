@@ -214,12 +214,23 @@
   - [x] URL 쿼리 파라미터로 선택된 관광지 상태 관리 (`selectedId`)
   - [x] 모바일 뷰 모드 전환 (`view` 파라미터)
   - [x] Suspense로 useSearchParams 래핑
-- [ ] 페이지네이션
-  - [ ] 무한 스크롤 구현
-    - [ ] Intersection Observer 사용
-    - [ ] 하단 로딩 인디케이터
-    - [ ] 페이지당 10-20개 항목
-  - [ ] 또는 페이지 번호 선택 방식
+- [x] 페이지네이션
+  - [x] 무한 스크롤 구현
+    - [x] Intersection Observer 사용
+    - [x] 하단 로딩 인디케이터
+    - [x] 페이지당 12개 항목
+  - [x] 페이지 번호 선택 방식
+  ***
+  추가 개발 사항:
+  - [x] `lib/api/tour-api.ts`에서 `getAreaBasedList`와 `searchKeyword`가 `totalCount` 포함 객체 반환
+  - [x] `actions/tours.ts` Server Actions 생성 (클라이언트에서 추가 페이지 데이터 로드)
+  - [x] `components/tour-pagination.tsx` 생성 (페이지 번호 UI, 모드 전환 토글)
+  - [x] `TourList`에 무한 스크롤 Intersection Observer 구현
+  - [x] `TourList`에 페이지네이션 props 추가 (hasMore, isLoadingMore, onLoadMore 등)
+  - [x] `ListMapView`에 페이지네이션 상태 관리 및 데이터 로드 로직 통합
+  - [x] URL 쿼리 파라미터 처리 (`page`, `paginationMode`)
+  - [x] 필터/검색 변경 시 페이지 리셋 로직 (`tour-filters.tsx`)
+  - [x] 에러 처리 (추가 로드 실패 시 재시도 버튼, 에러 메시지)
 - [ ] 최종 통합 및 스타일링
   - [ ] 모든 기능 통합 테스트
   - [ ] 반응형 디자인 확인 (모바일/태블릿/데스크톱)

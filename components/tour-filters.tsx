@@ -96,6 +96,9 @@ export function TourFilters({ areaCodes, className }: TourFiltersProps) {
       params.delete("sort");
     }
 
+    // 페이지네이션 리셋 (필터 변경 시 첫 페이지로)
+    params.delete("page");
+
     // URL 업데이트 (replaceIn: 브라우저 히스토리에 추가하지 않음)
     router.push(`/?${params.toString()}`, { scroll: false });
   };

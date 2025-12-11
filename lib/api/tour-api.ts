@@ -196,6 +196,93 @@ async function callApiWithRetry<T>(
 }
 
 /**
+ * 재시도 로직이 포함된 API 호출 함수 (totalCount 포함)
+ * 페이지네이션을 위한 함수로, items와 totalCount를 함께 반환
+ */
+async function callApiWithRetryAndCount<T>(
+  endpoint: string,
+  params: Record<string, string | number | undefined>,
+  retries: number = MAX_RETRIES
+): Promise<{ items: T[]; totalCount: number }> {
+  const commonParams = getCommonParams();
+  const queryParams = new URLSearchParams({
+    ...commonParams,
+    ...Object.fromEntries(
+      Object.entries(params)
+        .filter(([, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => [key, String(value)])
+    ),
+  });
+
+  const url = `${BASE_URL}${endpoint}?${queryParams.toString()}`;
+
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await fetchWithTimeout(url);
+
+      if (!response.ok) {
+        throw new TourApiError(
+          `API 요청 실패: ${response.statusText}`,
+          undefined,
+          response.status
+        );
+      }
+
+      const data: TourApiResponse<T> | TourApiErrorResponse =
+        await response.json();
+
+      // API 응답 에러 체크
+      if (data.response.header.resultCode !== "0000") {
+        const errorMsg = data.response.header.resultMsg || "알 수 없는 오류";
+        throw new TourApiError(
+          `API 오류: ${errorMsg}`,
+          data.response.header.resultCode
+        );
+      }
+
+      // 응답이 TourApiResponse인 경우 items와 totalCount 추출
+      if ("body" in data && data.response.body?.items) {
+        const responseData = data as TourApiResponse<T>;
+        const items = responseData.response.body.items!.item;
+        const totalCount = responseData.response.body.totalCount || 0;
+        // 단일 항목인 경우 배열로 변환
+        const itemsArray = Array.isArray(items) ? items : [items];
+        return {
+          items: itemsArray as T[],
+          totalCount,
+        };
+      }
+
+      throw new TourApiError("API 응답 형식이 올바르지 않습니다.");
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // 마지막 시도가 아니고, 재시도 가능한 에러인 경우
+      if (attempt < retries) {
+        // 네트워크 에러나 타임아웃 에러만 재시도
+        if (
+          lastError instanceof TourApiError &&
+          (lastError.statusCode === 408 ||
+            lastError.message.includes("시간 초과") ||
+            lastError.message.includes("네트워크"))
+        ) {
+          const delay = getRetryDelay(attempt);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        // API 응답 에러(예: 잘못된 파라미터)는 재시도하지 않음
+        break;
+      }
+    }
+  }
+
+  // 모든 재시도 실패
+  throw lastError || new TourApiError("API 요청 실패");
+}
+
+/**
  * 지역코드 조회 (areaCode2)
  * 
  * @param params - 지역코드 조회 파라미터
@@ -217,12 +304,12 @@ export async function getAreaCode(
  * 지역 기반 관광정보 목록 조회 (areaBasedList2)
  * 
  * @param params - 지역 기반 목록 조회 파라미터
- * @returns 관광지 목록
+ * @returns 관광지 목록과 전체 개수
  */
 export async function getAreaBasedList(
   params: AreaBasedListParams
-): Promise<TourItem[]> {
-  const result = await callApiWithRetry<TourItem>("/areaBasedList2", {
+): Promise<{ items: TourItem[]; totalCount: number }> {
+  return await callApiWithRetryAndCount<TourItem>("/areaBasedList2", {
     areaCode: params.areaCode,
     contentTypeId: params.contentTypeId,
     sigunguCode: params.sigunguCode,
@@ -232,28 +319,24 @@ export async function getAreaBasedList(
     numOfRows: params.numOfRows || 10,
     pageNo: params.pageNo || 1,
   });
-
-  return Array.isArray(result) ? result : [result];
 }
 
 /**
  * 키워드 검색 (searchKeyword2)
  * 
  * @param params - 키워드 검색 파라미터
- * @returns 검색된 관광지 목록
+ * @returns 검색된 관광지 목록과 전체 개수
  */
 export async function searchKeyword(
   params: SearchKeywordParams
-): Promise<TourItem[]> {
-  const result = await callApiWithRetry<TourItem>("/searchKeyword2", {
+): Promise<{ items: TourItem[]; totalCount: number }> {
+  return await callApiWithRetryAndCount<TourItem>("/searchKeyword2", {
     keyword: params.keyword,
     areaCode: params.areaCode,
     contentTypeId: params.contentTypeId,
     numOfRows: params.numOfRows || 10,
     pageNo: params.pageNo || 1,
   });
-
-  return Array.isArray(result) ? result : [result];
 }
 
 /**
