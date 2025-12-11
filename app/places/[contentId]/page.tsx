@@ -25,6 +25,8 @@ import { DetailIntro } from "@/components/tour-detail/detail-intro";
 import { DetailIntroSkeleton } from "@/components/tour-detail/detail-intro-skeleton";
 import { DetailGallery } from "@/components/tour-detail/detail-gallery";
 import { DetailGallerySkeleton } from "@/components/tour-detail/detail-gallery-skeleton";
+import { DetailMap } from "@/components/tour-detail/detail-map";
+import { DetailMapSkeleton } from "@/components/tour-detail/detail-map-skeleton";
 
 interface PageProps {
   params: Promise<{ contentId: string }>;
@@ -72,8 +74,12 @@ export default async function TourDetailPage({ params }: PageProps) {
           <DetailGallery contentId={contentId} />
         </Suspense>
 
+        {/* 지도 섹션 */}
+        <Suspense fallback={<DetailMapSkeleton />}>
+          <DetailMap contentId={contentId} />
+        </Suspense>
+
         {/* TODO: 추후 섹션 컴포넌트들 추가 예정
-          - 지도 섹션 (detail-map.tsx)
           - 반려동물 정보 섹션 (detail-pet-tour.tsx)
         */}
       </div>
