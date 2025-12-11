@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { SyncUserProvider } from "@/components/providers/sync-user-provider";
 import { customKoKR } from "@/lib/clerk/localization";
 import "./globals.css";
@@ -18,8 +19,41 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaaS 템플릿",
-  description: "Next.js + Clerk + Supabase 보일러플레이트",
+  title: {
+    default: "My Trip - 한국 관광지 정보 서비스",
+    template: "%s | My Trip",
+  },
+  description:
+    "전국 관광지 정보를 쉽게 검색하고 지도에서 확인하며 상세 정보를 조회할 수 있는 웹 서비스",
+  keywords: [
+    "관광",
+    "여행",
+    "한국",
+    "관광지",
+    "여행지",
+    "한국 여행",
+    "관광 정보",
+    "지도",
+    "검색",
+  ],
+  openGraph: {
+    title: "My Trip - 한국 관광지 정보 서비스",
+    description:
+      "전국 관광지 정보를 쉽게 검색하고 지도에서 확인하며 상세 정보를 조회할 수 있는 웹 서비스",
+    type: "website",
+    locale: "ko_KR",
+    siteName: "My Trip",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "My Trip - 한국 관광지 정보 서비스",
+    description:
+      "전국 관광지 정보를 쉽게 검색하고 지도에서 확인하며 상세 정보를 조회할 수 있는 웹 서비스",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -31,11 +65,12 @@ export default function RootLayout({
     <ClerkProvider localization={customKoKR}>
       <html lang="ko">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
         >
           <SyncUserProvider>
             <Navbar />
-            {children}
+            <main className="flex-1">{children}</main>
+            <Footer />
           </SyncUserProvider>
         </body>
       </html>

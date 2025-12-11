@@ -78,13 +78,17 @@
   추가 개발 사항:
   - [x] `CONTENT_TYPE_NAME` 상수 매핑 (Content Type ID → 타입명)
   - [x] `AREA_CODE_NAME` 상수 매핑 (지역 코드 → 지역명)
-- [ ] 레이아웃 구조
-  - [ ] `app/layout.tsx` 업데이트
-    - [ ] 메타데이터 설정
-    - [ ] 헤더/푸터 구조 확인
-  - [ ] `components/Navbar.tsx` 업데이트
-    - [ ] 로고, 검색창, 로그인 버튼
-    - [ ] 네비게이션 링크 (홈, 통계, 북마크)
+- [x] 레이아웃 구조
+  - [x] `app/layout.tsx` 업데이트
+    - [x] 메타데이터 설정
+    - [x] 헤더/푸터 구조 확인
+  - [x] `components/Navbar.tsx` 업데이트
+    - [x] 로고, 검색창, 로그인 버튼
+    - [x] 네비게이션 링크 (홈, 통계, 북마크)
+  - [x] `components/Footer.tsx` 생성
+    - [x] 저작권 표시
+    - [x] API 제공자 표시
+    - [x] 반응형 레이아웃
 - [ ] 공통 컴포넌트
   - [ ] `components/ui/loading.tsx` - 로딩 스피너
   - [ ] `components/ui/skeleton.tsx` - 스켈레톤 UI
