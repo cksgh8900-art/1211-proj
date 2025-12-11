@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Toaster } from "@/components/ui/sonner";
 import { SyncUserProvider } from "@/components/providers/sync-user-provider";
 import { customKoKR } from "@/lib/clerk/localization";
 import "./globals.css";
@@ -71,6 +72,7 @@ export default function RootLayout({
             <Navbar />
             <main className="flex-1">{children}</main>
             <Footer />
+            <Toaster position="top-center" />
           </SyncUserProvider>
         </body>
       </html>

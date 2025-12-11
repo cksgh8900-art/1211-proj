@@ -89,18 +89,23 @@
     - [x] 저작권 표시
     - [x] API 제공자 표시
     - [x] 반응형 레이아웃
-- [ ] 공통 컴포넌트
-  - [ ] `components/ui/loading.tsx` - 로딩 스피너
-  - [ ] `components/ui/skeleton.tsx` - 스켈레톤 UI
-  - [ ] `components/ui/error.tsx` - 에러 메시지
-  - [ ] `components/ui/toast.tsx` - 토스트 알림 (shadcn/ui)
+- [x] 공통 컴포넌트
+  - [x] `components/ui/loading.tsx` - 로딩 스피너
+  - [x] `components/ui/skeleton.tsx` - 스켈레톤 UI
+  - [x] `components/ui/error.tsx` - 에러 메시지
+  - [x] `components/ui/sonner.tsx` - 토스트 알림 (shadcn/ui)
+  - [x] `lib/utils/toast.ts` - 토스트 헬퍼 함수
+  - [x] `app/layout.tsx`에 Toaster 컴포넌트 추가
 
 ## Phase 2: 홈페이지 (`/`) - 관광지 목록
 
-- [ ] 페이지 기본 구조
-  - [ ] `app/page.tsx` 생성
-    - [ ] 기본 레이아웃 (헤더, 메인, 푸터)
-    - [ ] 반응형 컨테이너 설정
+- [x] 페이지 기본 구조
+  - [x] `app/page.tsx` 생성
+    - [x] 기본 레이아웃 (헤더, 메인, 푸터)
+    - [x] 반응형 컨테이너 설정
+    - [x] Hero Section 구조 생성 (데스크톱만)
+    - [x] Filters & Controls 섹션 구조 생성 (Sticky)
+    - [x] List/Map 영역 구조 생성 (2컬럼 그리드)
 - [ ] 관광지 목록 기능 (MVP 2.1)
   - [ ] `components/tour-card.tsx` 생성
     - [ ] 썸네일 이미지 (기본 이미지 fallback)
