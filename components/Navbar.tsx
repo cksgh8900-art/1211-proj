@@ -4,11 +4,12 @@ import { SignedOut, SignInButton, SignedIn, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Search, Menu, X, User } from "lucide-react";
+import { TourSearch } from "@/components/tour-search";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -44,28 +45,21 @@ const Navbar = () => {
 
         {/* 데스크톱 검색창 */}
         <div className="hidden lg:flex items-center gap-2 flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              type="search"
-              placeholder="관광지 검색..."
-              className="pl-10 w-full"
-              disabled
-              aria-label="관광지 검색"
-            />
-          </div>
+          <TourSearch variant="compact" />
         </div>
 
         {/* 모바일 검색 아이콘 및 햄버거 메뉴 */}
-        <div className="flex md:hidden items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            aria-label="검색"
-          >
-            <Search className="w-5 h-5" />
-          </Button>
+        <div className="flex lg:hidden items-center gap-2">
+          {!mobileSearchOpen && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileSearchOpen(true)}
+              aria-label="검색"
+            >
+              <Search className="w-5 h-5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -96,6 +90,25 @@ const Navbar = () => {
           </SignedIn>
         </div>
       </nav>
+
+      {/* 모바일 검색창 */}
+      {mobileSearchOpen && (
+        <div className="lg:hidden border-t bg-background p-4">
+          <TourSearch
+            variant="default"
+            className="w-full"
+            placeholder="관광지 검색..."
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileSearchOpen(false)}
+            className="mt-2 w-full"
+          >
+            닫기
+          </Button>
+        </div>
+      )}
 
       {/* 모바일 메뉴 */}
       {mobileMenuOpen && (

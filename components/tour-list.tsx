@@ -31,6 +31,7 @@ interface TourListProps {
   onRetry?: () => void;
   className?: string;
   sort?: "latest" | "name"; // 정렬 옵션 (서버에서 정렬된 경우 전달)
+  searchKeyword?: string; // 검색 키워드 (검색 결과일 때 표시)
 }
 
 /**
@@ -58,18 +59,47 @@ function TourListSkeleton() {
 /**
  * 빈 상태 UI
  */
-function TourListEmpty() {
+function TourListEmpty({ searchKeyword }: { searchKeyword?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
       <div className="rounded-full bg-muted p-4">
         <MapPin className="h-8 w-8 text-muted-foreground" />
       </div>
       <div className="space-y-1">
-        <h3 className="text-lg font-semibold">관광지를 찾을 수 없습니다</h3>
+        <h3 className="text-lg font-semibold">
+          {searchKeyword
+            ? `"${searchKeyword}" 검색 결과가 없습니다`
+            : "관광지를 찾을 수 없습니다"}
+        </h3>
         <p className="text-sm text-muted-foreground">
-          다른 지역이나 타입을 선택해보세요
+          {searchKeyword
+            ? "다른 키워드로 검색하거나 필터를 조정해보세요"
+            : "다른 지역이나 타입을 선택해보세요"}
         </p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 검색 결과 헤더
+ */
+function SearchResultHeader({
+  keyword,
+  count,
+}: {
+  keyword: string;
+  count: number;
+}) {
+  return (
+    <div className="mb-4 px-1">
+      <p className="text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">
+          &quot;{keyword}&quot;
+        </span>{" "}
+        검색 결과{" "}
+        <span className="font-medium text-foreground">{count}개</span>
+      </p>
     </div>
   );
 }
@@ -80,6 +110,7 @@ export function TourList({
   error = null,
   onRetry,
   className,
+  searchKeyword,
 }: TourListProps) {
   // 로딩 상태
   if (loading) {
@@ -110,24 +141,28 @@ export function TourList({
   if (tours.length === 0) {
     return (
       <div className={className}>
-        <TourListEmpty />
+        <TourListEmpty searchKeyword={searchKeyword} />
       </div>
     );
   }
 
   // 목록 표시
   return (
-    <div
-      className={cn(
-        "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3",
-        className
+    <div className={className}>
+      {searchKeyword && (
+        <SearchResultHeader keyword={searchKeyword} count={tours.length} />
       )}
-      role="list"
-      aria-label="관광지 목록"
-    >
-      {tours.map((tour) => (
-        <TourCard key={tour.contentid} tour={tour} />
-      ))}
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+        )}
+        role="list"
+        aria-label="관광지 목록"
+      >
+        {tours.map((tour) => (
+          <TourCard key={tour.contentid} tour={tour} />
+        ))}
+      </div>
     </div>
   );
 }

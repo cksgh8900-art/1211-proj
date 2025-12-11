@@ -22,7 +22,7 @@
  */
 
 import { Suspense } from "react";
-import { getAreaBasedList, getAreaCode } from "@/lib/api/tour-api";
+import { getAreaBasedList, getAreaCode, searchKeyword } from "@/lib/api/tour-api";
 import type { TourItem } from "@/lib/types/tour";
 import { TourList } from "@/components/tour-list";
 import { TourFilters } from "@/components/tour-filters";
@@ -51,6 +51,9 @@ async function TourListData({
   try {
     const params = await searchParams;
 
+    // 검색 키워드 파싱
+    const keyword = params.keyword ? String(params.keyword).trim() : undefined;
+
     // 필터 값 파싱
     const areaCode = params.area ? String(params.area) : undefined;
     const typeParams = params.type;
@@ -62,47 +65,94 @@ async function TourListData({
     const sort: "latest" | "name" =
       params.sort === "name" ? "name" : "latest";
 
-    // API 호출 (다중 타입 지원)
+    // API 호출 (검색 또는 목록 조회)
     let allTours: TourItem[] = [];
 
-    if (contentTypeIds.length === 0) {
-      // 타입 필터가 없으면 전체 조회
-      allTours = await getAreaBasedList({
-        areaCode,
-        numOfRows: 12,
-        pageNo: 1,
-      });
-    } else if (contentTypeIds.length === 1) {
-      // 단일 타입 선택
-      allTours = await getAreaBasedList({
-        areaCode,
-        contentTypeId: contentTypeIds[0],
-        numOfRows: 12,
-        pageNo: 1,
-      });
-    } else {
-      // 다중 타입 선택: 각 타입별로 병렬 API 호출
-      const apiCalls = contentTypeIds.map((contentTypeId) =>
-        getAreaBasedList({
+    if (keyword && keyword.length > 0) {
+      // 검색 모드: searchKeyword API 호출
+      if (contentTypeIds.length === 0) {
+        // 타입 필터가 없으면 검색만
+        allTours = await searchKeyword({
+          keyword,
           areaCode,
-          contentTypeId,
-          numOfRows: 12, // 각 타입별로 12개씩 가져오기
+          numOfRows: 12,
           pageNo: 1,
-        })
-      );
+        });
+      } else if (contentTypeIds.length === 1) {
+        // 단일 타입 필터 + 검색
+        allTours = await searchKeyword({
+          keyword,
+          areaCode,
+          contentTypeId: contentTypeIds[0],
+          numOfRows: 12,
+          pageNo: 1,
+        });
+      } else {
+        // 다중 타입 필터 + 검색: 각 타입별로 병렬 API 호출
+        const apiCalls = contentTypeIds.map((contentTypeId) =>
+          searchKeyword({
+            keyword,
+            areaCode,
+            contentTypeId,
+            numOfRows: 12,
+            pageNo: 1,
+          })
+        );
 
-      const results = await Promise.all(apiCalls);
-      
-      // 결과 합치기 (중복 제거: contentid 기준)
-      const tourMap = new Map<string, TourItem>();
-      for (const tours of results) {
-        for (const tour of tours) {
-          if (!tourMap.has(tour.contentid)) {
-            tourMap.set(tour.contentid, tour);
+        const results = await Promise.all(apiCalls);
+        
+        // 결과 합치기 (중복 제거: contentid 기준)
+        const tourMap = new Map<string, TourItem>();
+        for (const tours of results) {
+          for (const tour of tours) {
+            if (!tourMap.has(tour.contentid)) {
+              tourMap.set(tour.contentid, tour);
+            }
           }
         }
+        allTours = Array.from(tourMap.values());
       }
-      allTours = Array.from(tourMap.values());
+    } else {
+      // 목록 모드: getAreaBasedList API 호출 (기존 로직)
+      if (contentTypeIds.length === 0) {
+        // 타입 필터가 없으면 전체 조회
+        allTours = await getAreaBasedList({
+          areaCode,
+          numOfRows: 12,
+          pageNo: 1,
+        });
+      } else if (contentTypeIds.length === 1) {
+        // 단일 타입 선택
+        allTours = await getAreaBasedList({
+          areaCode,
+          contentTypeId: contentTypeIds[0],
+          numOfRows: 12,
+          pageNo: 1,
+        });
+      } else {
+        // 다중 타입 선택: 각 타입별로 병렬 API 호출
+        const apiCalls = contentTypeIds.map((contentTypeId) =>
+          getAreaBasedList({
+            areaCode,
+            contentTypeId,
+            numOfRows: 12, // 각 타입별로 12개씩 가져오기
+            pageNo: 1,
+          })
+        );
+
+        const results = await Promise.all(apiCalls);
+        
+        // 결과 합치기 (중복 제거: contentid 기준)
+        const tourMap = new Map<string, TourItem>();
+        for (const tours of results) {
+          for (const tour of tours) {
+            if (!tourMap.has(tour.contentid)) {
+              tourMap.set(tour.contentid, tour);
+            }
+          }
+        }
+        allTours = Array.from(tourMap.values());
+      }
     }
 
     // 정렬 처리 (클라이언트 사이드)
@@ -121,7 +171,9 @@ async function TourListData({
     // 결과 개수 제한 (12개)
     const limitedTours = sortedTours.slice(0, 12);
 
-    return <TourList tours={limitedTours} sort={sort} />;
+    return (
+      <TourList tours={limitedTours} sort={sort} searchKeyword={keyword} />
+    );
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error : new Error("알 수 없는 오류");
