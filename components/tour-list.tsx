@@ -32,6 +32,9 @@ interface TourListProps {
   className?: string;
   sort?: "latest" | "name"; // 정렬 옵션 (서버에서 정렬된 경우 전달)
   searchKeyword?: string; // 검색 키워드 (검색 결과일 때 표시)
+  selectedTourId?: string | null;
+  onTourClick?: (tour: TourItem) => void;
+  onTourHover?: (tour: TourItem | null) => void;
 }
 
 /**
@@ -111,6 +114,9 @@ export function TourList({
   onRetry,
   className,
   searchKeyword,
+  selectedTourId,
+  onTourClick,
+  onTourHover,
 }: TourListProps) {
   // 로딩 상태
   if (loading) {
@@ -160,7 +166,13 @@ export function TourList({
         aria-label="관광지 목록"
       >
         {tours.map((tour) => (
-          <TourCard key={tour.contentid} tour={tour} />
+          <TourCard
+            key={tour.contentid}
+            tour={tour}
+            selected={selectedTourId === tour.contentid}
+            onCardClick={onTourClick}
+            onCardHover={onTourHover}
+          />
         ))}
       </div>
     </div>

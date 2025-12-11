@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -62,6 +63,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const naverMapClientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
+
   return (
     <ClerkProvider localization={customKoKR}>
       <html lang="ko">
@@ -74,6 +77,13 @@ export default function RootLayout({
             <Footer />
             <Toaster position="top-center" />
           </SyncUserProvider>
+          {/* Naver Maps API 스크립트 */}
+          {naverMapClientId && (
+            <Script
+              src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${naverMapClientId}`}
+              strategy="beforeInteractive"
+            />
+          )}
         </body>
       </html>
     </ClerkProvider>

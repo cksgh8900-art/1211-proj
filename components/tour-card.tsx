@@ -26,6 +26,9 @@ import { cn } from "@/lib/utils";
 interface TourCardProps {
   tour: TourItem;
   className?: string;
+  selected?: boolean;
+  onCardClick?: (tour: TourItem) => void;
+  onCardHover?: (tour: TourItem | null) => void;
 }
 
 /**
@@ -52,7 +55,13 @@ function getAreaName(areaCode: string): string {
   return AREA_CODE_NAME[areaCode] || "";
 }
 
-export function TourCard({ tour, className }: TourCardProps) {
+export function TourCard({
+  tour,
+  className,
+  selected = false,
+  onCardClick,
+  onCardHover,
+}: TourCardProps) {
   const imageUrl = getImageUrl(tour);
   const contentTypeName = getContentTypeName(tour.contenttypeid);
   const areaName = getAreaName(tour.areacode);
@@ -60,12 +69,36 @@ export function TourCard({ tour, className }: TourCardProps) {
     ? `${tour.addr1} ${tour.addr2}`
     : tour.addr1;
 
+  const handleClick = (e: React.MouseEvent) => {
+    // 지도 이동이 우선이므로 기본 링크 동작 방지
+    if (onCardClick) {
+      e.preventDefault();
+      onCardClick(tour);
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (onCardHover) {
+      onCardHover(tour);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (onCardHover) {
+      onCardHover(null);
+    }
+  };
+
   return (
     <Link
       href={`/places/${tour.contentid}`}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={cn(
         "group relative flex flex-col rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-lg",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        selected && "ring-2 ring-primary ring-offset-2",
         className
       )}
       aria-label={`${tour.title} 상세보기`}

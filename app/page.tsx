@@ -24,8 +24,8 @@
 import { Suspense } from "react";
 import { getAreaBasedList, getAreaCode, searchKeyword } from "@/lib/api/tour-api";
 import type { TourItem } from "@/lib/types/tour";
-import { TourList } from "@/components/tour-list";
 import { TourFilters } from "@/components/tour-filters";
+import { ListMapView } from "@/components/list-map-view";
 
 /**
  * 지역 목록 데이터를 가져오는 Server Component
@@ -172,12 +172,16 @@ async function TourListData({
     const limitedTours = sortedTours.slice(0, 12);
 
     return (
-      <TourList tours={limitedTours} sort={sort} searchKeyword={keyword} />
+      <ListMapView
+        tours={limitedTours}
+        sort={sort}
+        searchKeyword={keyword}
+      />
     );
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error : new Error("알 수 없는 오류");
-    return <TourList tours={[]} error={errorMessage} />;
+    return <ListMapView tours={[]} error={errorMessage} />;
   }
 }
 
@@ -213,20 +217,9 @@ export default async function Home({ searchParams }: HomeProps) {
       {/* List/Map 영역 */}
       <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-          {/* 좌측: List View */}
-          <div className="list-view">
-            <Suspense fallback={<TourList loading={true} tours={[]} />}>
-              <TourListData searchParams={searchParams} />
-            </Suspense>
-          </div>
-
-          {/* 우측: Map View (데스크톱만) */}
-          <div className="hidden lg:block map-view">
-            {/* Phase 2.5에서 naver-map 컴포넌트 추가 예정 */}
-            <div className="flex items-center justify-center h-96 rounded-lg border-2 border-dashed text-muted-foreground">
-              지도가 여기에 표시됩니다
-            </div>
-          </div>
+          <Suspense fallback={<ListMapView loading={true} tours={[]} />}>
+            <TourListData searchParams={searchParams} />
+          </Suspense>
         </div>
       </section>
     </main>
