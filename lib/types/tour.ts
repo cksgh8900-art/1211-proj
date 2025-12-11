@@ -294,8 +294,8 @@ export interface AreaCodeParams {
 }
 
 export interface AreaBasedListParams {
-  areaCode: string; // 지역 코드
-  contentTypeId: string; // 콘텐츠 타입 ID
+  areaCode?: string; // 지역 코드 (선택, undefined면 전체 지역)
+  contentTypeId?: string; // 콘텐츠 타입 ID (선택, undefined면 전체 타입)
   sigunguCode?: string; // 시군구 코드
   cat1?: string; // 대분류
   cat2?: string; // 중분류

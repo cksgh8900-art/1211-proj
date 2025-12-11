@@ -18,7 +18,32 @@
  * - components/tour-filters.tsx (Phase 2.3)
  * - components/tour-search.tsx (Phase 2.4)
  * - components/naver-map.tsx (Phase 2.5)
+ * - lib/api/tour-api.ts: getAreaBasedList
  */
+
+import { Suspense } from "react";
+import { getAreaBasedList } from "@/lib/api/tour-api";
+import { TourList } from "@/components/tour-list";
+
+/**
+ * 관광지 목록 데이터를 가져오는 Server Component
+ */
+async function TourListData() {
+  try {
+    // 초기 데이터: 전체 지역, 전체 타입, 12개 항목
+    // areaCode와 contentTypeId를 생략하면 전체 조회
+    const tours = await getAreaBasedList({
+      numOfRows: 12,
+      pageNo: 1,
+    });
+
+    return <TourList tours={tours} />;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error : new Error("알 수 없는 오류");
+    return <TourList tours={[]} error={errorMessage} />;
+  }
+}
 
 export default function Home() {
   return (
@@ -51,10 +76,9 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {/* 좌측: List View */}
           <div className="list-view">
-            {/* Phase 2.2에서 tour-list 컴포넌트 추가 예정 */}
-            <div className="flex items-center justify-center h-96 rounded-lg border-2 border-dashed text-muted-foreground">
-              관광지 목록이 여기에 표시됩니다
-            </div>
+            <Suspense fallback={<TourList loading={true} tours={[]} />}>
+              <TourListData />
+            </Suspense>
           </div>
 
           {/* 우측: Map View (데스크톱만) */}
