@@ -21,6 +21,10 @@ import { notFound } from "next/navigation";
 import { BackButton } from "@/components/tour-detail/back-button";
 import { DetailInfo } from "@/components/tour-detail/detail-info";
 import { DetailInfoSkeleton } from "@/components/tour-detail/detail-info-skeleton";
+import { DetailIntro } from "@/components/tour-detail/detail-intro";
+import { DetailIntroSkeleton } from "@/components/tour-detail/detail-intro-skeleton";
+import { DetailGallery } from "@/components/tour-detail/detail-gallery";
+import { DetailGallerySkeleton } from "@/components/tour-detail/detail-gallery-skeleton";
 
 interface PageProps {
   params: Promise<{ contentId: string }>;
@@ -58,9 +62,17 @@ export default async function TourDetailPage({ params }: PageProps) {
           <DetailInfo contentId={contentId} />
         </Suspense>
 
+        {/* 운영 정보 섹션 */}
+        <Suspense fallback={<DetailIntroSkeleton />}>
+          <DetailIntro contentId={contentId} />
+        </Suspense>
+
+        {/* 이미지 갤러리 섹션 */}
+        <Suspense fallback={<DetailGallerySkeleton />}>
+          <DetailGallery contentId={contentId} />
+        </Suspense>
+
         {/* TODO: 추후 섹션 컴포넌트들 추가 예정
-          - 운영 정보 섹션 (detail-intro.tsx)
-          - 이미지 갤러리 (detail-gallery.tsx)
           - 지도 섹션 (detail-map.tsx)
           - 반려동물 정보 섹션 (detail-pet-tour.tsx)
         */}

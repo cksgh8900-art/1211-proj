@@ -286,25 +286,49 @@
   - [x] 홈페이지 URL 정규화 함수 (http:// 또는 https:// 자동 추가)
   - [x] 개요 텍스트 HTML 태그 제거 및 줄바꿈 처리
   - [x] 접근성 개선 (aria-label, 시맨틱 HTML)
-- [ ] 운영 정보 섹션 (MVP 2.4.2)
-  - [ ] `components/tour-detail/detail-intro.tsx` 생성
-    - [ ] `getDetailIntro()` API 연동
-    - [ ] 운영시간/개장시간
-    - [ ] 휴무일
-    - [ ] 이용요금
-    - [ ] 주차 가능 여부
-    - [ ] 수용인원
-    - [ ] 체험 프로그램
-    - [ ] 유모차/반려동물 동반 가능 여부
-    - [ ] 정보 없는 항목 숨김 처리
-- [ ] 이미지 갤러리 (MVP 2.4.3)
-  - [ ] `components/tour-detail/detail-gallery.tsx` 생성
-    - [ ] `getDetailImage()` API 연동
-    - [ ] 대표 이미지 + 서브 이미지들
-    - [ ] 이미지 슬라이드 기능 (Swiper 또는 캐러셀)
-    - [ ] 이미지 클릭 시 전체화면 모달
-    - [ ] 이미지 없으면 기본 이미지
-    - [ ] Next.js Image 컴포넌트 사용 (최적화)
+- [x] 운영 정보 섹션 (MVP 2.4.2)
+  - [x] `components/tour-detail/detail-intro.tsx` 생성
+    - [x] `getDetailIntro()` API 연동
+    - [x] 운영시간/개장시간
+    - [x] 휴무일
+    - [x] 이용요금
+    - [x] 주차 가능 여부
+    - [x] 수용인원
+    - [x] 체험 프로그램
+    - [x] 유모차/반려동물 동반 가능 여부
+    - [x] 정보 없는 항목 숨김 처리
+  ***
+  추가 개발 사항:
+  - [x] `components/tour-detail/detail-intro-skeleton.tsx` 생성 (로딩 상태 스켈레톤 UI)
+  - [x] `app/places/[contentId]/page.tsx`에 DetailIntro 컴포넌트 통합 (Suspense 사용)
+  - [x] contentTypeId별 필드 선택 로직 구현 (getOperatingHours, getRestDate, getUseFee 등)
+  - [x] 정보 항목 컴포넌트 (InfoItem) 구현 (아이콘 + 라벨 + 값 구조)
+  - [x] HTML 태그 제거 함수 (formatText) 구현
+  - [x] 모든 정보가 없을 경우 섹션 숨김 처리 (null 반환)
+  - [x] 타입별 추가 정보 표시 (할인정보, 규모, 관람 소요시간, 문의처)
+  - [x] 접근성 개선 (aria-label, 시맨틱 HTML)
+- [x] 이미지 갤러리 (MVP 2.4.3)
+  - [x] `components/tour-detail/detail-gallery.tsx` 생성
+    - [x] `getDetailImage()` API 연동
+    - [x] 대표 이미지 + 서브 이미지들
+    - [x] 이미지 슬라이드 기능 (Swiper 또는 캐러셀)
+    - [x] 이미지 클릭 시 전체화면 모달
+    - [x] 이미지 없으면 기본 이미지
+    - [x] Next.js Image 컴포넌트 사용 (최적화)
+  ***
+  추가 개발 사항:
+  - [x] Swiper 라이브러리 설치 및 설정
+  - [x] `components/tour-detail/image-modal.tsx` 생성 (전체화면 모달, Client Component)
+  - [x] `components/tour-detail/image-gallery-client.tsx` 생성 (갤러리 클라이언트 컴포넌트)
+  - [x] `components/tour-detail/detail-gallery-skeleton.tsx` 생성 (로딩 상태 스켈레톤 UI)
+  - [x] `app/places/[contentId]/page.tsx`에 DetailGallery 컴포넌트 통합 (Suspense 사용)
+  - [x] 이미지 정렬 및 필터링 로직 구현 (serialnum 기준)
+  - [x] 메인 이미지 슬라이더 및 썸네일 그리드 구현
+  - [x] 썸네일 클릭 시 메인 이미지 변경 기능
+  - [x] 전체화면 모달에서 Swiper 슬라이드 기능
+  - [x] 키보드 네비게이션 (좌우 화살표, ESC) 구현
+  - [x] 이미지 인덱스 표시 (현재 이미지 / 전체 이미지)
+  - [x] 접근성 개선 (aria-label, 키보드 네비게이션)
 - [ ] 지도 섹션 (MVP 2.4.4)
   - [ ] `components/tour-detail/detail-map.tsx` 생성
     - [ ] 해당 관광지 위치 표시
