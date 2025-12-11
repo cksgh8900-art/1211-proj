@@ -252,12 +252,19 @@
 
 ## Phase 3: 상세페이지 (`/places/[contentId]`)
 
-- [ ] 페이지 기본 구조
-  - [ ] `app/places/[contentId]/page.tsx` 생성
-    - [ ] 동적 라우팅 설정
-    - [ ] 뒤로가기 버튼 (헤더)
-    - [ ] 기본 레이아웃 구조
-    - [ ] 라우팅 테스트
+- [x] 페이지 기본 구조
+  - [x] `app/places/[contentId]/page.tsx` 생성
+    - [x] 동적 라우팅 설정 (Next.js 15 async params)
+    - [x] 뒤로가기 버튼 (페이지 내부 상단)
+    - [x] 기본 레이아웃 구조 (반응형 컨테이너, 섹션 준비)
+    - [x] contentId 검증 및 에러 처리
+    - [x] 라우팅 테스트
+  ***
+  추가 개발 사항:
+  - [x] `components/tour-detail/back-button.tsx` 생성 (뒤로가기 버튼 컴포넌트)
+  - [x] `components/tour-detail/error-content.tsx` 생성 (에러 콘텐츠 컴포넌트, Client Component)
+  - [x] `app/places/[contentId]/not-found.tsx` 생성 (404 페이지)
+  - [x] 접근성 개선 (aria-label 추가)
 - [ ] 기본 정보 섹션 (MVP 2.4.1)
   - [ ] `components/tour-detail/detail-info.tsx` 생성
     - [ ] `getDetailCommon()` API 연동
