@@ -265,19 +265,27 @@
   - [x] `components/tour-detail/error-content.tsx` 생성 (에러 콘텐츠 컴포넌트, Client Component)
   - [x] `app/places/[contentId]/not-found.tsx` 생성 (404 페이지)
   - [x] 접근성 개선 (aria-label 추가)
-- [ ] 기본 정보 섹션 (MVP 2.4.1)
-  - [ ] `components/tour-detail/detail-info.tsx` 생성
-    - [ ] `getDetailCommon()` API 연동
-    - [ ] 관광지명 (대제목)
-    - [ ] 대표 이미지 (크게 표시)
-    - [ ] 주소 표시 및 복사 기능
-      - [ ] 클립보드 API 사용
-      - [ ] 복사 완료 토스트
-    - [ ] 전화번호 (클릭 시 전화 연결)
-    - [ ] 홈페이지 (링크)
-    - [ ] 개요 (긴 설명문)
-    - [ ] 관광 타입 및 카테고리 뱃지
-    - [ ] 정보 없는 항목 숨김 처리
+- [x] 기본 정보 섹션 (MVP 2.4.1)
+  - [x] `components/tour-detail/detail-info.tsx` 생성
+    - [x] `getDetailCommon()` API 연동
+    - [x] 관광지명 (대제목)
+    - [x] 대표 이미지 (크게 표시)
+    - [x] 주소 표시 및 복사 기능
+      - [x] 클립보드 API 사용
+      - [x] 복사 완료 토스트
+    - [x] 전화번호 (클릭 시 전화 연결)
+    - [x] 홈페이지 (링크)
+    - [x] 개요 (긴 설명문)
+    - [x] 관광 타입 및 카테고리 뱃지
+    - [x] 정보 없는 항목 숨김 처리
+  ***
+  추가 개발 사항:
+  - [x] `components/tour-detail/copy-address-button.tsx` 생성 (주소 복사 버튼, Client Component)
+  - [x] `components/tour-detail/detail-info-skeleton.tsx` 생성 (로딩 상태 스켈레톤 UI)
+  - [x] `app/places/[contentId]/page.tsx`에 DetailInfo 컴포넌트 통합 (Suspense 사용)
+  - [x] 홈페이지 URL 정규화 함수 (http:// 또는 https:// 자동 추가)
+  - [x] 개요 텍스트 HTML 태그 제거 및 줄바꿈 처리
+  - [x] 접근성 개선 (aria-label, 시맨틱 HTML)
 - [ ] 운영 정보 섹션 (MVP 2.4.2)
   - [ ] `components/tour-detail/detail-intro.tsx` 생성
     - [ ] `getDetailIntro()` API 연동

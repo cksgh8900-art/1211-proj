@@ -16,8 +16,11 @@
  * - next/navigation: notFound
  */
 
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/tour-detail/back-button";
+import { DetailInfo } from "@/components/tour-detail/detail-info";
+import { DetailInfoSkeleton } from "@/components/tour-detail/detail-info-skeleton";
 
 interface PageProps {
   params: Promise<{ contentId: string }>;
@@ -50,27 +53,17 @@ export default async function TourDetailPage({ params }: PageProps) {
 
       {/* 메인 콘텐츠 영역 */}
       <div className="space-y-6 mt-6">
+        {/* 기본 정보 섹션 */}
+        <Suspense fallback={<DetailInfoSkeleton />}>
+          <DetailInfo contentId={contentId} />
+        </Suspense>
+
         {/* TODO: 추후 섹션 컴포넌트들 추가 예정
-          - 기본 정보 섹션 (detail-info.tsx)
           - 운영 정보 섹션 (detail-intro.tsx)
           - 이미지 갤러리 (detail-gallery.tsx)
           - 지도 섹션 (detail-map.tsx)
           - 반려동물 정보 섹션 (detail-pet-tour.tsx)
         */}
-        
-        {/* 임시: contentId 표시 (개발 중) */}
-        <section 
-          className="rounded-lg border bg-card p-6"
-          aria-label="관광지 상세 정보"
-        >
-          <h1 className="text-2xl font-bold mb-4">관광지 상세페이지</h1>
-          <p className="text-muted-foreground">
-            Content ID: <span className="font-mono font-semibold">{contentId}</span>
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            이 페이지는 기본 구조만 구현되었습니다. 추후 섹션별 컴포넌트가 추가될 예정입니다.
-          </p>
-        </section>
       </div>
     </div>
   );
