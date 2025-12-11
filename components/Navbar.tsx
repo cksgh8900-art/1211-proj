@@ -13,30 +13,30 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <nav className="flex justify-between items-center p-4 gap-4 h-16 max-w-7xl mx-auto">
+      <nav className="flex items-center p-4 gap-4 h-16 max-w-7xl mx-auto relative">
         {/* 로고 */}
-        <Link href="/" className="text-2xl font-bold">
+        <Link href="/" className="text-2xl font-bold flex-shrink-0 z-10">
           My Trip
         </Link>
 
         {/* 데스크톱 네비게이션 */}
-        <div className="hidden md:flex items-center gap-6 flex-1 justify-center">
+        <div className="hidden md:flex items-center gap-6 flex-shrink-0">
           <Link
             href="/"
-            className="text-sm font-medium transition-colors hover:text-primary"
+            className="text-sm font-medium transition-colors hover:text-primary whitespace-nowrap"
           >
             홈
           </Link>
           <Link
             href="/stats"
-            className="text-sm font-medium transition-colors hover:text-primary"
+            className="text-sm font-medium transition-colors hover:text-primary whitespace-nowrap"
           >
             통계
           </Link>
           <SignedIn>
             <Link
               href="/bookmarks"
-              className="text-sm font-medium transition-colors hover:text-primary"
+              className="text-sm font-medium transition-colors hover:text-primary whitespace-nowrap"
             >
               북마크
             </Link>
@@ -44,12 +44,12 @@ const Navbar = () => {
         </div>
 
         {/* 데스크톱 검색창 */}
-        <div className="hidden lg:flex items-center gap-2 flex-1 max-w-md">
+        <div className="hidden lg:flex items-center gap-2 flex-shrink-0 w-[350px]">
           <TourSearch variant="compact" />
         </div>
 
         {/* 모바일 검색 아이콘 및 햄버거 메뉴 */}
-        <div className="flex lg:hidden items-center gap-2">
+        <div className="flex lg:hidden items-center gap-2 flex-shrink-0 ml-auto">
           {!mobileSearchOpen && (
             <Button
               variant="ghost"
@@ -76,12 +76,12 @@ const Navbar = () => {
         </div>
 
         {/* 로그인 버튼 / UserButton */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0 z-10">
           <SignedOut>
             <SignInButton mode="modal">
-              <Button className="hidden sm:inline-flex">로그인</Button>
-              <Button variant="ghost" size="icon" className="sm:hidden" aria-label="로그인">
-                <User className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="sm:size-auto sm:px-4" aria-label="로그인">
+                <User className="w-5 h-5 sm:hidden" />
+                <span className="hidden sm:inline">로그인</span>
               </Button>
             </SignInButton>
           </SignedOut>

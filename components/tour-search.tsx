@@ -105,15 +105,15 @@ export function TourSearch({
 
   if (variant === "compact") {
     return (
-      <div className={cn("relative flex items-center", className)}>
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+      <div className={cn("relative flex items-center w-full", className)}>
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none z-10" />
         <Input
           type="search"
           placeholder={placeholder}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="pl-10 pr-10 min-w-[300px] md:min-w-[500px]"
+          className="pl-10 pr-10 w-full max-w-[300px]"
           aria-label="관광지 검색"
         />
         {hasKeyword && (
@@ -121,7 +121,7 @@ export function TourSearch({
             variant="ghost"
             size="icon"
             onClick={handleClear}
-            className="absolute right-1 h-7 w-7"
+            className="absolute right-12 h-7 w-7 z-10"
             aria-label="검색어 초기화"
           >
             <X className="h-4 w-4" />
@@ -131,7 +131,7 @@ export function TourSearch({
           type="button"
           onClick={handleSearch}
           disabled={isSearching}
-          className="ml-2"
+          className="ml-2 flex-shrink-0"
           aria-label="검색"
         >
           {isSearching ? (

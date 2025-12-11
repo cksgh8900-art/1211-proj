@@ -347,38 +347,56 @@
   - [x] 좌표 정보 토글 기능 (표시/숨김)
   - [x] 네이버 지도 API 로드 실패 시 에러 처리
   - [x] 좌표가 없는 경우 섹션 숨김 처리
-- [ ] 공유 기능 (MVP 2.4.5)
-  - [ ] `components/tour-detail/share-button.tsx` 생성
-    - [ ] URL 복사 기능
-      - [ ] `navigator.clipboard.writeText()` 사용
-      - [ ] HTTPS 환경 확인
-    - [ ] 복사 완료 토스트 메시지
-    - [ ] 공유 아이콘 버튼 (Share/Link 아이콘)
-  - [ ] Open Graph 메타태그
-    - [ ] `app/places/[contentId]/page.tsx`에 Metadata 생성
-    - [ ] `og:title` - 관광지명
-    - [ ] `og:description` - 관광지 설명 (100자 이내)
-    - [ ] `og:image` - 대표 이미지 (1200x630 권장)
-    - [ ] `og:url` - 상세페이지 URL
-    - [ ] `og:type` - "website"
-- [ ] 북마크 기능 (MVP 2.4.5)
-  - [ ] `components/bookmarks/bookmark-button.tsx` 생성
-    - [ ] 별 아이콘 (채워짐/비어있음)
-    - [ ] 북마크 상태 확인 (Supabase 조회)
-    - [ ] 북마크 추가/제거 기능
-    - [ ] 인증된 사용자 확인 (Clerk)
-    - [ ] 로그인하지 않은 경우: 로그인 유도 또는 localStorage 임시 저장
-  - [ ] Supabase 연동
-    - [ ] `lib/api/supabase-api.ts` 생성
-      - [ ] `getBookmark()` - 북마크 조회
-      - [ ] `addBookmark()` - 북마크 추가
-      - [ ] `removeBookmark()` - 북마크 제거
-      - [ ] `getUserBookmarks()` - 사용자 북마크 목록
-    - [ ] `bookmarks` 테이블 사용 (db.sql 참고)
-      - [ ] `user_id` (users 테이블 참조)
-      - [ ] `content_id` (한국관광공사 API contentid)
-      - [ ] UNIQUE 제약 (user_id, content_id)
-  - [ ] 상세페이지에 북마크 버튼 추가
+- [x] 공유 기능 (MVP 2.4.5)
+  - [x] `components/tour-detail/share-button.tsx` 생성
+    - [x] URL 복사 기능
+      - [x] `navigator.clipboard.writeText()` 사용
+      - [x] HTTPS 환경 확인
+    - [x] 복사 완료 토스트 메시지
+    - [x] 공유 아이콘 버튼 (Share/Link 아이콘)
+  - [x] Open Graph 메타태그
+    - [x] `app/places/[contentId]/page.tsx`에 Metadata 생성
+    - [x] `og:title` - 관광지명
+    - [x] `og:description` - 관광지 설명 (100자 이내)
+    - [x] `og:image` - 대표 이미지 (1200x630 권장)
+    - [x] `og:url` - 상세페이지 URL
+    - [x] `og:type` - "website"
+  ***
+  추가 개발 사항:
+  - [x] `generateMetadata` 함수 구현 (Next.js 15 Metadata API)
+  - [x] HTML 태그 제거 함수 (`stripHtmlTags`) 구현
+  - [x] Twitter Card 메타태그 추가 (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:images`)
+  - [x] 이미지가 없는 경우 처리 (og:image 생략)
+  - [x] 설명이 없는 경우 기본 설명 사용
+  - [x] ShareButton을 상세페이지 헤더에 통합 (뒤로가기 버튼 옆)
+  - [x] 반응형 디자인 (모바일에서 텍스트 숨김, 아이콘만 표시)
+  - [x] 복사 상태 UI (Share2 아이콘 → Check 아이콘)
+- [x] 북마크 기능 (MVP 2.4.5)
+  - [x] `components/bookmarks/bookmark-button.tsx` 생성
+    - [x] 별 아이콘 (채워짐/비어있음)
+    - [x] 북마크 상태 확인 (Supabase 조회)
+    - [x] 북마크 추가/제거 기능
+    - [x] 인증된 사용자 확인 (Clerk)
+    - [x] 로그인하지 않은 경우: 로그인 유도 (SignInButton 모달)
+  - [x] Supabase 연동
+    - [x] `actions/bookmarks.ts` 생성 (Server Actions)
+      - [x] `getBookmark()` - 북마크 조회
+      - [x] `addBookmark()` - 북마크 추가
+      - [x] `removeBookmark()` - 북마크 제거
+      - [x] `getUserBookmarks()` - 사용자 북마크 목록
+    - [x] `bookmarks` 테이블 사용 (db.sql 참고)
+      - [x] `user_id` (users 테이블 참조)
+      - [x] `content_id` (한국관광공사 API contentid)
+      - [x] UNIQUE 제약 (user_id, content_id)
+  - [x] 상세페이지에 북마크 버튼 추가
+  ***
+  추가 개발 사항:
+  - [x] Clerk user ID → Supabase user_id 매핑 함수 (`getSupabaseUserId`)
+  - [x] 북마크 상태 실시간 업데이트 (useState, useEffect)
+  - [x] 로딩 상태 처리 (isLoading, isToggling)
+  - [x] 토스트 메시지 통합 (성공/실패 피드백)
+  - [x] 에러 처리 (UNIQUE 제약 위반, 로그인 필요 등)
+  - [x] 접근성 개선 (aria-label 추가)
 - [ ] 반려동물 정보 섹션 (MVP 2.5)
   - [ ] `components/tour-detail/detail-pet-tour.tsx` 생성
     - [ ] `getDetailPetTour()` API 연동
