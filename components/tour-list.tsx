@@ -210,13 +210,14 @@ export function TourList({
         role="list"
         aria-label="관광지 목록"
       >
-        {tours.map((tour) => (
+        {tours.map((tour, index) => (
           <TourCard
             key={tour.contentid}
             tour={tour}
             selected={selectedTourId === tour.contentid}
             onCardClick={onTourClick}
             onCardHover={onTourHover}
+            priority={index < 6} // 첫 6개 카드만 priority 적용
           />
         ))}
       </div>

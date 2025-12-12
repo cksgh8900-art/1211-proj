@@ -24,6 +24,7 @@ import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import type { TourImage } from "@/lib/types/tour";
 import { ImageModal } from "./image-modal";
+import { getBlurDataURL } from "@/lib/utils/image";
 
 interface ImageGalleryClientProps {
   images: TourImage[];
@@ -77,14 +78,16 @@ export function ImageGalleryClient({ images }: ImageGalleryClientProps) {
                   className="relative w-full h-full cursor-pointer"
                   onClick={() => handleImageClick(index)}
                 >
-                  <Image
-                    src={image.originimgurl}
-                    alt={image.imgname || `관광지 이미지 ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-                    priority={index === 0}
-                  />
+                <Image
+                  src={image.originimgurl}
+                  alt={image.imgname || `관광지 이미지 ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                  priority={index === 0}
+                  placeholder="blur"
+                  blurDataURL={getBlurDataURL()}
+                />
                 </div>
               </SwiperSlide>
             ))}
@@ -101,6 +104,8 @@ export function ImageGalleryClient({ images }: ImageGalleryClientProps) {
               className="object-cover"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
               priority
+              placeholder="blur"
+              blurDataURL={getBlurDataURL()}
             />
           </div>
         )}
@@ -138,6 +143,8 @@ export function ImageGalleryClient({ images }: ImageGalleryClientProps) {
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                  placeholder="blur"
+                  blurDataURL={getBlurDataURL()}
                 />
               </button>
             );

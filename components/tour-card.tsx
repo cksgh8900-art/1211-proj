@@ -22,6 +22,7 @@ import type { TourItem } from "@/lib/types/tour";
 import { CONTENT_TYPE_NAME, AREA_CODE_NAME } from "@/lib/types/stats";
 import { MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getBlurDataURL } from "@/lib/utils/image";
 
 interface TourCardProps {
   tour: TourItem;
@@ -29,6 +30,7 @@ interface TourCardProps {
   selected?: boolean;
   onCardClick?: (tour: TourItem) => void;
   onCardHover?: (tour: TourItem | null) => void;
+  priority?: boolean; // Above-the-fold 이미지에 priority 적용
 }
 
 /**
@@ -61,6 +63,7 @@ export function TourCard({
   selected = false,
   onCardClick,
   onCardHover,
+  priority = false,
 }: TourCardProps) {
   const imageUrl = getImageUrl(tour);
   const contentTypeName = getContentTypeName(tour.contenttypeid);
@@ -111,7 +114,11 @@ export function TourCard({
             alt={tour.title}
             fill
             className="object-cover transition-transform duration-200 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            priority={priority}
+            loading={priority ? "eager" : "lazy"}
+            placeholder="blur"
+            blurDataURL={getBlurDataURL()}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">

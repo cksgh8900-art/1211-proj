@@ -25,6 +25,7 @@ import type { TourDetail } from "@/lib/types/tour";
 import { CONTENT_TYPE_NAME, AREA_CODE_NAME } from "@/lib/types/stats";
 import { CopyAddressButton } from "./copy-address-button";
 import { ErrorMessage } from "@/components/ui/error";
+import { getBlurDataURL } from "@/lib/utils/image";
 
 interface DetailInfoProps {
   contentId: string;
@@ -138,7 +139,10 @@ export async function DetailInfo({ contentId }: DetailInfoProps) {
               fill
               className="object-cover"
               priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 90vw, 80vw"
+              loading="eager"
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 80vw"
+              placeholder="blur"
+              blurDataURL={getBlurDataURL()}
             />
           </div>
         )}

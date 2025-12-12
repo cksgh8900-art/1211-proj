@@ -29,6 +29,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { TourImage } from "@/lib/types/tour";
+import { getBlurDataURL } from "@/lib/utils/image";
 
 interface ImageModalProps {
   images: TourImage[];
@@ -127,6 +128,8 @@ export function ImageModal({
                     className="object-contain"
                     sizes="100vw"
                     priority={index === initialIndex}
+                    placeholder="blur"
+                    blurDataURL={getBlurDataURL()}
                   />
                 </div>
               </SwiperSlide>

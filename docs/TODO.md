@@ -575,8 +575,7 @@
   - [x] 북마크 생성일시(`created_at`) 정보 포함 (Map 형태로 전달)
   - [x] 메타데이터 설정 (title, description, Open Graph, Twitter Card)
   - [x] Suspense 경계 설정 (정렬 옵션, 북마크 목록)
-- [x] 북마크 관리 기능
-  - [x] 정렬 옵션
+- [x] - [x]북마크 관리 기능 정렬 옵션
     - [x] 최신순 (created_at DESC)
     - [x] 이름순 (가나다순)
     - [x] 지역별
@@ -608,14 +607,29 @@
 
 ## Phase 6: 최적화 & 배포
 
-- [ ] 이미지 최적화
-  - [ ] `next.config.ts` 외부 도메인 설정
-    - [ ] 한국관광공사 이미지 도메인 추가
-    - [ ] 네이버 지도 이미지 도메인 추가
-  - [ ] Next.js Image 컴포넌트 사용 확인
-    - [ ] priority 속성 (above-the-fold)
-    - [ ] lazy loading (below-the-fold)
-    - [ ] responsive sizes 설정
+- [x] 이미지 최적화
+  - [x] `next.config.ts` 외부 도메인 설정
+    - [x] 한국관광공사 이미지 도메인 추가
+    - [x] 네이버 지도 이미지 도메인 추가
+  - [x] Next.js Image 컴포넌트 사용 확인
+    - [x] priority 속성 (above-the-fold)
+    - [x] lazy loading (below-the-fold)
+    - [x] responsive sizes 설정
+  ***
+  추가 개발 사항:
+  - [x] `next.config.ts`에 네이버 지도 이미지 도메인 추가 (`oapi.map.naver.com`, `map.naver.com`)
+  - [x] `next.config.ts`에 이미지 최적화 설정 추가 (`formats`, `deviceSizes`, `imageSizes`)
+  - [x] `components/tour-card.tsx`에 `priority` 속성 추가 (첫 6개 카드만 priority 적용)
+  - [x] `components/tour-list.tsx`에서 TourCard에 index 전달하여 priority 조건부 적용
+  - [x] `components/tour-detail/detail-info.tsx`에 `loading="eager"` 속성 추가 (이미 priority 있음)
+  - [x] `components/tour-card.tsx`의 `sizes` 속성 최적화 (모바일 640px 기준으로 조정)
+  - [x] `components/tour-detail/detail-info.tsx`의 `sizes` 속성 최적화 (1280px 기준으로 조정)
+  - [x] `lib/utils/image.ts` 생성 (blur placeholder 유틸리티 함수)
+  - [x] 모든 Image 컴포넌트에 `placeholder="blur"` 및 `blurDataURL` 추가
+    - [x] `components/tour-card.tsx`
+    - [x] `components/tour-detail/detail-info.tsx`
+    - [x] `components/tour-detail/image-gallery-client.tsx` (메인 이미지, 썸네일)
+    - [x] `components/tour-detail/image-modal.tsx`
 - [ ] 전역 에러 핸들링
   - [ ] `app/error.tsx` 생성
   - [ ] `app/global-error.tsx` 생성
