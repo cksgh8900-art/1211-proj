@@ -31,6 +31,8 @@ import { DetailGallery } from "@/components/tour-detail/detail-gallery";
 import { DetailGallerySkeleton } from "@/components/tour-detail/detail-gallery-skeleton";
 import { DetailMap } from "@/components/tour-detail/detail-map";
 import { DetailMapSkeleton } from "@/components/tour-detail/detail-map-skeleton";
+import { DetailPetTour } from "@/components/tour-detail/detail-pet-tour";
+import { DetailPetTourSkeleton } from "@/components/tour-detail/detail-pet-tour-skeleton";
 import { ShareButton } from "@/components/tour-detail/share-button";
 import { BookmarkButton } from "@/components/bookmarks/bookmark-button";
 
@@ -159,6 +161,11 @@ export default async function TourDetailPage({ params }: PageProps) {
           <DetailIntro contentId={contentId} />
         </Suspense>
 
+        {/* 반려동물 동반 정보 섹션 */}
+        <Suspense fallback={<DetailPetTourSkeleton />}>
+          <DetailPetTour contentId={contentId} />
+        </Suspense>
+
         {/* 이미지 갤러리 섹션 */}
         <Suspense fallback={<DetailGallerySkeleton />}>
           <DetailGallery contentId={contentId} />
@@ -169,9 +176,6 @@ export default async function TourDetailPage({ params }: PageProps) {
           <DetailMap contentId={contentId} />
         </Suspense>
 
-        {/* TODO: 추후 섹션 컴포넌트들 추가 예정
-          - 반려동물 정보 섹션 (detail-pet-tour.tsx)
-        */}
       </div>
     </div>
   );

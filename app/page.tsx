@@ -72,8 +72,10 @@ async function AreaCodesData() {
   try {
     const areaCodes = await getAreaCode({ numOfRows: 100 });
     return <TourFilters areaCodes={areaCodes} />;
-  } catch {
-    // 지역 목록 로드 실패 시 빈 배열로 처리
+  } catch (error) {
+    // 지역 목록 로드 실패 시 에러 로깅
+    console.error("지역 코드 로드 실패:", error);
+    // 빈 배열로 처리 (필터는 작동하지만 지역 목록이 비어있음)
     return <TourFilters areaCodes={[]} />;
   }
 }
@@ -167,13 +169,29 @@ async function TourListData({
       // 목록 모드: getAreaBasedList API 호출 (기존 로직)
       if (contentTypeIds.length === 0) {
         // 타입 필터가 없으면 전체 조회
+        // areaCode도 없으면 기본값으로 서울(1) + 관광지 타입(12) 조회
+        const defaultAreaCode = areaCode || "1"; // 기본값: 서울
+        const defaultContentTypeId = areaCode ? undefined : "12"; // 지역 필터가 없으면 관광지 타입 기본값
+        
         const result = await getAreaBasedList({
-          areaCode,
+          areaCode: defaultAreaCode,
+          contentTypeId: defaultContentTypeId,
           numOfRows: 12,
           pageNo: validPageNo,
         });
         allTours = result.items;
         totalCount = result.totalCount;
+        
+        // 개발 환경에서 API 응답 로깅
+        if (process.env.NODE_ENV === "development") {
+          console.log("관광지 목록 조회 결과:", {
+            areaCode: defaultAreaCode,
+            contentTypeId: defaultContentTypeId || "없음",
+            itemsCount: result.items.length,
+            totalCount: result.totalCount,
+            isDefault: !areaCode && !defaultContentTypeId,
+          });
+        }
       } else if (contentTypeIds.length === 1) {
         // 단일 타입 선택
         const result = await getAreaBasedList({
@@ -241,8 +259,28 @@ async function TourListData({
       />
     );
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error : new Error("알 수 없는 오류");
+    // 에러 로깅 (서버 사이드)
+    console.error("관광지 목록 로드 실패:", error);
+    
+    // 에러 메시지 생성
+    let errorMessage: Error;
+    if (error instanceof Error) {
+      // API 키 관련 에러인지 확인
+      if (error.message.includes("API 키") || error.message.includes("CONFIG_ERROR")) {
+        errorMessage = new Error(
+          "API 키가 설정되지 않았습니다. NEXT_PUBLIC_TOUR_API_KEY 환경변수를 확인해주세요."
+        );
+      } else if (error.message.includes("인증키 오류") || error.message.includes("0002")) {
+        errorMessage = new Error(
+          "API 인증키 오류입니다. 발급받은 API 키가 올바른지 확인해주세요."
+        );
+      } else {
+        errorMessage = error;
+      }
+    } else {
+      errorMessage = new Error("알 수 없는 오류가 발생했습니다.");
+    }
+    
     return <ListMapView tours={[]} error={errorMessage} />;
   }
 }

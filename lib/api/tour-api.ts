@@ -92,13 +92,24 @@ function getFriendlyErrorMessage(
 
 /**
  * 공통 파라미터 생성 함수
+ * 
+ * API 키 우선순위:
+ * 1. NEXT_PUBLIC_TOUR_API_KEY (클라이언트/서버 공통)
+ * 2. TOUR_API_KEY (서버 사이드 백업용)
  */
 function getCommonParams() {
-  const serviceKey = process.env.NEXT_PUBLIC_TOUR_API_KEY;
+  const serviceKey =
+    process.env.NEXT_PUBLIC_TOUR_API_KEY || process.env.TOUR_API_KEY;
 
   if (!serviceKey) {
+    // 개발 환경에서만 상세한 디버깅 정보 출력
+    if (process.env.NODE_ENV === "development") {
+      console.error("API 키 확인:");
+      console.error("- NEXT_PUBLIC_TOUR_API_KEY:", process.env.NEXT_PUBLIC_TOUR_API_KEY ? "설정됨" : "없음");
+      console.error("- TOUR_API_KEY:", process.env.TOUR_API_KEY ? "설정됨" : "없음");
+    }
     throw new TourApiError(
-      "API 키가 설정되지 않았습니다. 관리자에게 문의해주세요.",
+      "API 키가 설정되지 않았습니다. NEXT_PUBLIC_TOUR_API_KEY 또는 TOUR_API_KEY를 설정해주세요.",
       "CONFIG_ERROR"
     );
   }
@@ -186,6 +197,11 @@ async function callApiWithRetry<T>(
       const data: TourApiResponse<T> | TourApiErrorResponse =
         await response.json();
 
+      // 개발 환경에서 응답 구조 로깅 (디버깅용)
+      if (process.env.NODE_ENV === "development") {
+        console.log(`[${endpoint}] API 응답 구조:`, JSON.stringify(data, null, 2));
+      }
+
       // API 응답 에러 체크
       if (data.response.header.resultCode !== "0000") {
         const errorCode = data.response.header.resultCode;
@@ -198,14 +214,34 @@ async function callApiWithRetry<T>(
       }
 
       // 응답이 TourApiResponse인 경우 items 추출
-      if ("body" in data && data.response.body?.items) {
+      if ("body" in data && data.response.body) {
         const responseData = data as TourApiResponse<T>;
-        const items = responseData.response.body.items!.item;
+        
+        // items가 없는 경우 (데이터가 없을 때)
+        if (!responseData.response.body.items) {
+          // 빈 배열 반환 (에러가 아닌 경우로 처리)
+          return [] as unknown as T;
+        }
+
+        const items = responseData.response.body.items.item;
+        
+        // item이 없는 경우 (빈 배열)
+        if (!items) {
+          return [] as unknown as T;
+        }
+
         // 단일 항목인 경우 배열로 변환
         return (Array.isArray(items) ? items : [items]) as unknown as T;
       }
 
-      throw new TourApiError("API 응답 형식이 올바르지 않습니다.");
+      // body가 없는 경우 (데이터 없음)
+      if (!("body" in data) || !data.response.body) {
+        return [] as unknown as T;
+      }
+
+      // 예상치 못한 응답 구조인 경우에도 빈 배열 반환 (에러 방지)
+      console.warn(`[${endpoint}] 예상치 못한 응답 구조:`, data);
+      return [] as unknown as T;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
@@ -270,6 +306,11 @@ async function callApiWithRetryAndCount<T>(
       const data: TourApiResponse<T> | TourApiErrorResponse =
         await response.json();
 
+      // 개발 환경에서 응답 구조 로깅 (디버깅용)
+      if (process.env.NODE_ENV === "development") {
+        console.log(`[${endpoint}] API 응답 구조:`, JSON.stringify(data, null, 2));
+      }
+
       // API 응답 에러 체크
       if (data.response.header.resultCode !== "0000") {
         const errorCode = data.response.header.resultCode;
@@ -282,10 +323,28 @@ async function callApiWithRetryAndCount<T>(
       }
 
       // 응답이 TourApiResponse인 경우 items와 totalCount 추출
-      if ("body" in data && data.response.body?.items) {
+      if ("body" in data && data.response.body) {
         const responseData = data as TourApiResponse<T>;
-        const items = responseData.response.body.items!.item;
+        
+        // items가 없는 경우 (데이터가 없을 때)
+        if (!responseData.response.body.items) {
+          return {
+            items: [] as T[],
+            totalCount: responseData.response.body.totalCount || 0,
+          };
+        }
+
+        const items = responseData.response.body.items.item;
         const totalCount = responseData.response.body.totalCount || 0;
+        
+        // item이 없는 경우 (빈 배열)
+        if (!items) {
+          return {
+            items: [] as T[],
+            totalCount,
+          };
+        }
+
         // 단일 항목인 경우 배열로 변환
         const itemsArray = Array.isArray(items) ? items : [items];
         return {
@@ -294,7 +353,20 @@ async function callApiWithRetryAndCount<T>(
         };
       }
 
-      throw new TourApiError("API 응답 형식이 올바르지 않습니다.");
+      // body가 없는 경우 (데이터 없음)
+      if (!("body" in data) || !data.response.body) {
+        return {
+          items: [] as T[],
+          totalCount: 0,
+        };
+      }
+
+      // 예상치 못한 응답 구조인 경우에도 빈 배열 반환 (에러 방지)
+      console.warn(`[${endpoint}] 예상치 못한 응답 구조:`, data);
+      return {
+        items: [] as T[],
+        totalCount: 0,
+      };
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 

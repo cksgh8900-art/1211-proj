@@ -31,9 +31,9 @@
 ## Phase 1: 기본 구조 & 공통 설정
 
 - [ ] 프로젝트 셋업
-  - [ ] 환경변수 설정 (`.env`)
-    - [ ] `NEXT_PUBLIC_TOUR_API_KEY` (한국관광공사 API)
-    - [ ] `TOUR_API_KEY` (서버 사이드용)
+  - [x] 환경변수 설정 (`.env`)
+    - [x] `NEXT_PUBLIC_TOUR_API_KEY` (한국관광공사 API)
+    - [ ] `TOUR_API_KEY` (서버 사이드용, 현재 미사용 - NEXT_PUBLIC_TOUR_API_KEY로 대체)
     - [ ] `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` (네이버 지도)
     - [ ] Clerk 인증 키 확인
     - [ ] Supabase 키 확인
@@ -262,7 +262,7 @@
   ***
   추가 개발 사항:
   - [x] `components/tour-detail/back-button.tsx` 생성 (뒤로가기 버튼 컴포넌트)
-  - [x] `components/tour-detail/error-content.tsx` 생성 (에러 콘텐츠 컴포넌트, Client Component)
+  - [ ] `components/tour-detail/error-content.tsx` 생성 (에러 콘텐츠 컴포넌트, Client Component) - **미사용: ErrorMessage 컴포넌트로 대체**
   - [x] `app/places/[contentId]/not-found.tsx` 생성 (404 페이지)
   - [x] 접근성 개선 (aria-label 추가)
 - [x] 기본 정보 섹션 (MVP 2.4.1)
@@ -397,32 +397,48 @@
   - [x] 토스트 메시지 통합 (성공/실패 피드백)
   - [x] 에러 처리 (UNIQUE 제약 위반, 로그인 필요 등)
   - [x] 접근성 개선 (aria-label 추가)
-- [ ] 반려동물 정보 섹션 (MVP 2.5)
-  - [ ] `components/tour-detail/detail-pet-tour.tsx` 생성
-    - [ ] `getDetailPetTour()` API 연동
-    - [ ] 반려동물 동반 가능 여부 표시
-    - [ ] 반려동물 크기 제한 정보
-    - [ ] 반려동물 입장 가능 장소 (실내/실외)
-    - [ ] 반려동물 동반 추가 요금
-    - [ ] 반려동물 전용 시설 정보
-    - [ ] 아이콘 및 뱃지 디자인 (🐾)
-    - [ ] 주의사항 강조 표시
+- [x] 반려동물 정보 섹션 (MVP 2.5)
+  - [x] `components/tour-detail/detail-pet-tour.tsx` 생성
+    - [x] `getDetailPetTour()` API 연동
+    - [x] 반려동물 동반 가능 여부 표시
+    - [x] 반려동물 크기 제한 정보
+    - [x] 반려동물 입장 가능 장소 (실내/실외)
+    - [x] 반려동물 동반 추가 요금
+    - [x] 반려동물 전용 시설 정보
+    - [x] 아이콘 및 뱃지 디자인 (🐾)
+    - [x] 주의사항 강조 표시
+  ***
+  추가 개발 사항:
+  - [x] `components/tour-detail/detail-pet-tour-skeleton.tsx` 생성 (로딩 상태 스켈레톤 UI)
+  - [x] `app/places/[contentId]/page.tsx`에 DetailPetTour 컴포넌트 통합 (Suspense 사용)
+  - [x] InfoItem 컴포넌트 패턴 사용 (DetailIntro와 동일한 구조)
+  - [x] 정보가 없는 경우 섹션 숨김 처리 (null 반환)
+  - [x] 에러 처리 구현 (ErrorMessage 컴포넌트 사용)
+  - [x] HTML 태그 제거 함수 (formatText) 구현
+  - [x] 접근성 개선 (aria-label, 시맨틱 HTML)
+  - [x] 반응형 디자인 적용
 - [ ] 추천 관광지 섹션 (선택 사항)
   - [ ] 같은 지역 또는 타입의 다른 관광지 추천
   - [ ] 카드 형태로 표시
-- [ ] 최종 통합 및 스타일링
-  - [ ] 모든 섹션 통합
-  - [ ] 반응형 디자인 확인
-  - [ ] 모바일 최적화
-  - [ ] 접근성 확인 (ARIA 라벨, 키보드 네비게이션)
+- [x] 최종 통합 및 스타일링
+  - [x] 모든 섹션 통합
+  - [x] 반응형 디자인 확인
+  - [x] 모바일 최적화
+  - [x] 접근성 확인 (ARIA 라벨, 키보드 네비게이션)
 
 ## Phase 4: 통계 대시보드 페이지 (`/stats`)
 
-- [ ] 페이지 기본 구조
-  - [ ] `app/stats/page.tsx` 생성
-    - [ ] 기본 레이아웃 구조
-    - [ ] 반응형 레이아웃 설정 (모바일 우선)
-    - [ ] Server Component로 구현
+- [x] 페이지 기본 구조
+  - [x] `app/stats/page.tsx` 생성
+    - [x] 기본 레이아웃 구조
+    - [x] 반응형 레이아웃 설정 (모바일 우선)
+    - [x] Server Component로 구현
+  ***
+  추가 개발 사항:
+  - [x] 메타데이터 설정 (export const metadata, Open Graph, Twitter Card)
+  - [x] 스켈레톤 UI 컴포넌트 추가 (StatsSummarySkeleton, ChartSkeleton)
+  - [x] Suspense 경계 설정 (각 섹션별 독립적 로딩)
+  - [x] 접근성 요소 추가 (시맨틱 HTML, aria-label, 섹션 구조)
 - [ ] 통계 데이터 수집
   - [ ] `lib/api/stats-api.ts` 생성
     - [ ] `getRegionStats()` - 지역별 관광지 개수 집계
