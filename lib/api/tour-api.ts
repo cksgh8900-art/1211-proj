@@ -214,16 +214,20 @@ async function callApiWithRetry<T>(
       }
 
       // 응답이 TourApiResponse인 경우 items 추출
-      if ("body" in data && data.response.body) {
-        const responseData = data as TourApiResponse<T>;
+      // data.response.body가 존재하는지 확인 (API 성공 응답 구조)
+      if (data.response && data.response.body) {
+        const body = data.response.body as {
+          items?: { item?: T | T[] };
+          totalCount?: number;
+        };
         
         // items가 없는 경우 (데이터가 없을 때)
-        if (!responseData.response.body.items) {
+        if (!body.items) {
           // 빈 배열 반환 (에러가 아닌 경우로 처리)
           return [] as unknown as T;
         }
 
-        const items = responseData.response.body.items.item;
+        const items = body.items.item;
         
         // item이 없는 경우 (빈 배열)
         if (!items) {
@@ -235,12 +239,7 @@ async function callApiWithRetry<T>(
       }
 
       // body가 없는 경우 (데이터 없음)
-      if (!("body" in data) || !data.response.body) {
-        return [] as unknown as T;
-      }
-
-      // 예상치 못한 응답 구조인 경우에도 빈 배열 반환 (에러 방지)
-      console.warn(`[${endpoint}] 예상치 못한 응답 구조:`, data);
+      console.warn(`[${endpoint}] 응답에 body가 없습니다:`, data);
       return [] as unknown as T;
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
@@ -323,19 +322,32 @@ async function callApiWithRetryAndCount<T>(
       }
 
       // 응답이 TourApiResponse인 경우 items와 totalCount 추출
-      if ("body" in data && data.response.body) {
-        const responseData = data as TourApiResponse<T>;
+      // data.response.body가 존재하는지 확인 (API 성공 응답 구조)
+      if (data.response && data.response.body) {
+        const body = data.response.body as {
+          items?: { item?: T | T[] };
+          totalCount?: number;
+          numOfRows?: number;
+          pageNo?: number;
+        };
+        
+        // totalCount 추출 (타입 안전하게)
+        const totalCount = typeof body.totalCount === 'number' ? body.totalCount : 0;
+        
+        // 개발 환경에서 디버깅 로그
+        if (process.env.NODE_ENV === "development") {
+          console.log(`[${endpoint}] totalCount 추출:`, totalCount, `(원본: ${body.totalCount})`);
+        }
         
         // items가 없는 경우 (데이터가 없을 때)
-        if (!responseData.response.body.items) {
+        if (!body.items) {
           return {
             items: [] as T[],
-            totalCount: responseData.response.body.totalCount || 0,
+            totalCount,
           };
         }
 
-        const items = responseData.response.body.items.item;
-        const totalCount = responseData.response.body.totalCount || 0;
+        const items = body.items.item;
         
         // item이 없는 경우 (빈 배열)
         if (!items) {
@@ -347,6 +359,12 @@ async function callApiWithRetryAndCount<T>(
 
         // 단일 항목인 경우 배열로 변환
         const itemsArray = Array.isArray(items) ? items : [items];
+        
+        // 개발 환경에서 추출된 데이터 수 로깅
+        if (process.env.NODE_ENV === "development") {
+          console.log(`[${endpoint}] 추출된 items 수:`, itemsArray.length);
+        }
+        
         return {
           items: itemsArray as T[],
           totalCount,
@@ -354,15 +372,7 @@ async function callApiWithRetryAndCount<T>(
       }
 
       // body가 없는 경우 (데이터 없음)
-      if (!("body" in data) || !data.response.body) {
-        return {
-          items: [] as T[],
-          totalCount: 0,
-        };
-      }
-
-      // 예상치 못한 응답 구조인 경우에도 빈 배열 반환 (에러 방지)
-      console.warn(`[${endpoint}] 예상치 못한 응답 구조:`, data);
+      console.warn(`[${endpoint}] 응답에 body가 없습니다:`, data);
       return {
         items: [] as T[],
         totalCount: 0,

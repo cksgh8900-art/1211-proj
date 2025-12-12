@@ -544,11 +544,21 @@
 
 ## Phase 5: 북마크 페이지 (`/bookmarks`) - 선택 사항
 
-- [ ] Supabase 설정 확인
-  - [ ] `bookmarks` 테이블 확인 (db.sql 참고)
-    - [ ] `users` 테이블과의 관계 확인
-    - [ ] 인덱스 확인 (user_id, content_id, created_at)
-    - [ ] RLS 비활성화 확인 (개발 환경)
+- [x] Supabase 설정 확인
+  - [x] `bookmarks` 테이블 확인 (db.sql 참고)
+    - [x] `users` 테이블과의 관계 확인
+    - [x] 인덱스 확인 (user_id, content_id, created_at)
+    - [x] RLS 비활성화 확인 (개발 환경)
+  ***
+  추가 개발 사항:
+  - [x] Supabase MCP 도구를 사용한 테이블 구조 상세 확인
+  - [x] 외래 키 제약조건 확인 (bookmarks.user_id → users.id, ON DELETE CASCADE)
+  - [x] 모든 인덱스 확인 (bookmarks: 5개, users: 2개)
+  - [x] 기존 북마크 구현 검증 (actions/bookmarks.ts)
+  - [x] Supabase 클라이언트 설정 확인 (server.ts, clerk-client.ts, service-role.ts)
+  - [x] Supabase 보안 권고사항 확인 (RLS 비활성화 경고 - 의도된 설정)
+  - [x] 검증 스크립트 작성 (scripts/verify-supabase-setup.ts)
+  - [x] 확인 결과 문서화 (docs/task/20250101-phase5-supabase-setup-verification.md)
 - [ ] 북마크 목록 페이지
   - [ ] `app/bookmarks/page.tsx` 생성
     - [ ] 인증된 사용자만 접근 가능

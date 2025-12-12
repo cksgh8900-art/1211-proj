@@ -121,10 +121,17 @@ export async function getTypeStats(): Promise<TypeStats[]> {
           pageNo: 1,
         });
 
+        // 개발 환경에서 디버깅 로그
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            `[getTypeStats] 타입 ${contentTypeId} (${CONTENT_TYPE_NAME[contentTypeId]}): totalCount=${result.totalCount}`
+          );
+        }
+
         return {
           contentTypeId: contentTypeId as ContentTypeId,
           typeName: CONTENT_TYPE_NAME[contentTypeId],
-          count: result.totalCount,
+          count: result.totalCount || 0,
         } as TypeStats;
       } catch (error) {
         // 개별 타입 조회 실패 시 로그 기록하고 null 반환
@@ -144,6 +151,14 @@ export async function getTypeStats(): Promise<TypeStats[]> {
 
   // 전체 개수 계산
   const totalCount = validResults.reduce((sum, r) => sum + r.count, 0);
+
+  // 개발 환경에서 디버깅 로그
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      `[getTypeStats] 각 타입별 count:`,
+      validResults.map((r) => `${r.typeName}=${r.count}`).join(", ")
+    );
+  }
 
   // 백분율 계산
   const resultsWithPercentage = validResults.map((r) => ({

@@ -12,17 +12,25 @@
  */
 
 /**
- * KATEC 좌표계를 WGS84 좌표계로 변환
+ * 한국관광공사 API 좌표를 WGS84 좌표계로 변환
  *
- * 한국관광공사 API는 KATEC 좌표계를 사용하며, 정수형으로 저장됩니다.
- * 이를 WGS84 좌표계로 변환하려면 10000000으로 나누어야 합니다.
+ * 한국관광공사 API(KorService2)는 두 가지 형식으로 좌표를 반환할 수 있습니다:
+ * 1. 소수점 형식 (예: "126.9846616856") - 이미 WGS84 좌표계
+ * 2. 정수 형식 (예: "1269846616") - KATEC 좌표계, 10000000으로 나누어야 함
  *
- * @param mapx - 경도 (KATEC 좌표계, 정수형 문자열)
- * @param mapy - 위도 (KATEC 좌표계, 정수형 문자열)
+ * 이 함수는 두 가지 형식을 자동으로 감지하여 처리합니다.
+ *
+ * @param mapx - 경도 (문자열)
+ * @param mapy - 위도 (문자열)
  * @returns WGS84 좌표계의 위도(lat)와 경도(lng)
  *
  * @example
  * ```typescript
+ * // 소수점 형식 (이미 WGS84)
+ * const { lat, lng } = convertKATECToWGS84("126.9846616856", "37.5820858828");
+ * // { lat: 37.5820858828, lng: 126.9846616856 }
+ *
+ * // 정수 형식 (KATEC → WGS84 변환 필요)
  * const { lat, lng } = convertKATECToWGS84("1270000000", "375000000");
  * // { lat: 37.5, lng: 127.0 }
  * ```
@@ -31,9 +39,22 @@ export function convertKATECToWGS84(
   mapx: string,
   mapy: string
 ): { lat: number; lng: number } {
-  // 문자열을 숫자로 변환 후 10000000으로 나누기
-  const lng = Number.parseInt(mapx, 10) / 10000000;
-  const lat = Number.parseInt(mapy, 10) / 10000000;
+  // 소수점 여부 확인하여 형식 판단
+  const hasDecimalX = mapx.includes(".");
+  const hasDecimalY = mapy.includes(".");
+
+  let lng: number;
+  let lat: number;
+
+  if (hasDecimalX && hasDecimalY) {
+    // 소수점 형식: 이미 WGS84 좌표계이므로 그대로 파싱
+    lng = Number.parseFloat(mapx);
+    lat = Number.parseFloat(mapy);
+  } else {
+    // 정수 형식: KATEC 좌표계이므로 10000000으로 나누기
+    lng = Number.parseInt(mapx, 10) / 10000000;
+    lat = Number.parseInt(mapy, 10) / 10000000;
+  }
 
   // 유효성 검사
   if (Number.isNaN(lat) || Number.isNaN(lng)) {

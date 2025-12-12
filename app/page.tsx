@@ -316,11 +316,9 @@ export default async function Home({ searchParams }: HomeProps) {
 
       {/* List/Map 영역 */}
       <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-          <Suspense fallback={<ListMapView loading={true} tours={[]} />}>
-            <TourListData searchParams={searchParams} />
-          </Suspense>
-        </div>
+        <Suspense fallback={<ListMapView loading={true} tours={[]} />}>
+          <TourListData searchParams={searchParams} />
+        </Suspense>
       </section>
     </main>
   );

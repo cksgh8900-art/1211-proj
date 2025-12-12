@@ -157,9 +157,17 @@ export function NaverMap({
       </svg>
     `;
 
+    // Point 클래스가 존재하는지 확인
+    if (!naver.maps.Point) {
+      return {
+        content: svgIcon,
+        anchor: { x: 16, y: 16 },
+      };
+    }
+
     return {
       content: svgIcon,
-      anchor: new (naver.maps as any).Point(16, 16),
+      anchor: new naver.maps.Point(16, 16),
     };
   };
 
@@ -167,8 +175,17 @@ export function NaverMap({
   useEffect(() => {
     const checkNaverMaps = () => {
       if (typeof window !== "undefined" && window.naver?.maps) {
-        setIsLoaded(true);
-        setError(null);
+        // maps 객체의 필수 메서드들이 존재하는지 확인
+        if (
+          window.naver.maps.Map &&
+          window.naver.maps.Marker &&
+          window.naver.maps.InfoWindow &&
+          window.naver.maps.LatLng &&
+          window.naver.maps.LatLngBounds
+        ) {
+          setIsLoaded(true);
+          setError(null);
+        }
       }
     };
 
@@ -181,24 +198,48 @@ export function NaverMap({
       return;
     }
 
+    // 이미 로드되어 있는지 확인
     checkNaverMaps();
-    const interval = setInterval(checkNaverMaps, 100);
-
-    // 5초 후에도 로드되지 않으면 에러 표시
-    const timeout = setTimeout(() => {
-      if (!window.naver?.maps) {
-        setError(
-          "네이버 지도를 불러올 수 없습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요."
-        );
+    
+    // 스크립트 로드 대기 (최대 10초)
+    let checkCount = 0;
+    const maxChecks = 100; // 10초 (100ms * 100)
+    const interval = setInterval(() => {
+      checkCount++;
+      checkNaverMaps();
+      
+      if (isLoaded || checkCount >= maxChecks) {
         clearInterval(interval);
+        if (!isLoaded && checkCount >= maxChecks) {
+          setError(
+            "네이버 지도를 불러올 수 없습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요."
+          );
+        }
       }
-    }, 5000);
+    }, 100);
+
+    // 스크립트 로드 이벤트 리스너 (스크립트가 동적으로 로드되는 경우)
+    const handleScriptLoad = () => {
+      checkNaverMaps();
+    };
+
+    // window에 naver 객체가 추가될 때 감지
+    const observer = new MutationObserver(() => {
+      checkNaverMaps();
+    });
+
+    if (typeof window !== "undefined") {
+      observer.observe(document.head, {
+        childList: true,
+        subtree: true,
+      });
+    }
 
     return () => {
       clearInterval(interval);
-      clearTimeout(timeout);
+      observer.disconnect();
     };
-  }, []);
+  }, [isLoaded]);
 
   // 지도 초기화
   useEffect(() => {
@@ -215,14 +256,25 @@ export function NaverMap({
       const center = calculateCenter(tours) || defaultCenter;
 
       // 지도 생성
-      const map = new naver.maps.Map(mapRef.current, {
+      const mapOptions: any = {
         center,
         zoom: tours.length > 0 ? 12 : 10,
         mapTypeControl: true, // 지도 유형 컨트롤 (일반/스카이뷰)
-        mapTypeControlOptions: {
-          position: (naver.maps as any).Position?.TOP_RIGHT || 1, // TOP_RIGHT = 1
-        },
-      });
+      };
+
+      // Position 객체가 존재하는 경우에만 설정
+      if (naver.maps.Position) {
+        mapOptions.mapTypeControlOptions = {
+          position: naver.maps.Position.TOP_RIGHT,
+        };
+      } else {
+        // Position이 없는 경우 숫자로 직접 설정 (TOP_RIGHT = 1)
+        mapOptions.mapTypeControlOptions = {
+          position: 1,
+        };
+      }
+
+      const map = new naver.maps.Map(mapRef.current, mapOptions);
 
       mapInstanceRef.current = map;
 
@@ -411,9 +463,14 @@ export function NaverMap({
               <circle cx="20" cy="20" r="8" fill="white"/>
             </svg>
           `;
+          // Point 클래스가 존재하는지 확인
+          const anchor = naver.maps.Point
+            ? new naver.maps.Point(20, 20)
+            : { x: 20, y: 20 };
+          
           marker.setIcon({
             content: svgIcon,
-            anchor: new (naver.maps as any).Point(20, 20),
+            anchor,
           });
           marker.setZIndex(100);
           highlightedMarkerRef.current = marker;
