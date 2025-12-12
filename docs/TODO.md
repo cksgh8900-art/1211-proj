@@ -439,22 +439,31 @@
   - [x] 스켈레톤 UI 컴포넌트 추가 (StatsSummarySkeleton, ChartSkeleton)
   - [x] Suspense 경계 설정 (각 섹션별 독립적 로딩)
   - [x] 접근성 요소 추가 (시맨틱 HTML, aria-label, 섹션 구조)
-- [ ] 통계 데이터 수집
-  - [ ] `lib/api/stats-api.ts` 생성
-    - [ ] `getRegionStats()` - 지역별 관광지 개수 집계
-      - [ ] `areaBasedList2` API로 각 지역별 totalCount 조회
-      - [ ] 지역 코드별로 API 호출
-    - [ ] `getTypeStats()` - 타입별 관광지 개수 집계
-      - [ ] `areaBasedList2` API로 각 타입별 totalCount 조회
-      - [ ] contentTypeId별로 API 호출
-    - [ ] `getStatsSummary()` - 전체 통계 요약
-      - [ ] 전체 관광지 수
-      - [ ] Top 3 지역
-      - [ ] Top 3 타입
-      - [ ] 마지막 업데이트 시간
-    - [ ] 병렬 API 호출로 성능 최적화
-    - [ ] 에러 처리 및 재시도 로직
-    - [ ] 데이터 캐싱 (revalidate: 3600)
+- [x] 통계 데이터 수집
+  - [x] `lib/api/stats-api.ts` 생성
+    - [x] `getRegionStats()` - 지역별 관광지 개수 집계
+      - [x] `areaBasedList2` API로 각 지역별 totalCount 조회
+      - [x] 지역 코드별로 API 호출
+    - [x] `getTypeStats()` - 타입별 관광지 개수 집계
+      - [x] `areaBasedList2` API로 각 타입별 totalCount 조회
+      - [x] contentTypeId별로 API 호출
+    - [x] `getStatsSummary()` - 전체 통계 요약
+      - [x] 전체 관광지 수
+      - [x] Top 3 지역
+      - [x] Top 3 타입
+      - [x] 마지막 업데이트 시간
+    - [x] 병렬 API 호출로 성능 최적화
+    - [x] 에러 처리 및 재시도 로직
+    - [x] 데이터 캐싱 (revalidate: 3600)
+  ***
+  추가 개발 사항:
+  - [x] Promise.all을 사용한 병렬 API 호출 구현
+  - [x] 개별 API 호출 실패 시 부분 데이터 반환 (null 필터링)
+  - [x] 개발 환경에서 성능 모니터링 로깅 (소요 시간 측정)
+  - [x] 타입 안전성 보장 (TypeScript 타입 가드 사용)
+  - [x] percentage(백분율) 계산 로직 구현 (getTypeStats)
+  - [x] 에러 복구 로직 (개별 실패해도 계속 진행)
+  - [x] 캐싱 전략 문서화 (페이지 레벨에서 설정 필요)
 - [ ] 통계 요약 카드
   - [ ] `components/stats/stats-summary.tsx` 생성
     - [ ] 전체 관광지 수 표시
