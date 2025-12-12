@@ -657,10 +657,34 @@
     - [x] 네트워크 에러: 인터넷 연결 확인 안내
     - [x] 인증 에러: 로그인 다시 시도 안내
     - [x] 데이터베이스 에러: 데이터베이스 연결 문제 안내
-- [ ] 404 페이지
-  - [ ] `app/not-found.tsx` 생성
-    - [ ] 사용자 친화적인 메시지
-    - [ ] 홈으로 돌아가기 버튼
+- [x] 404 페이지
+  - [x] `app/not-found.tsx` 생성
+    - [x] 사용자 친화적인 메시지
+    - [x] 홈으로 돌아가기 버튼
+  ***
+  추가 개발 사항:
+  - [x] `app/not-found.tsx` 생성 (전역 404 페이지, Server Component)
+    - [x] Next.js 15의 `notFound()` 함수와 연동
+    - [x] 전역 레이아웃 사용 (Navbar, Footer 포함)
+  - [x] 404 페이지 UI 구현
+    - [x] 404 숫자 아이콘 (destructive 색상, 기존 not-found.tsx와 일관성 유지)
+    - [x] "페이지를 찾을 수 없습니다" 제목 및 설명 메시지
+    - [x] 홈으로 돌아가기 버튼 (Home 아이콘)
+    - [x] 관광지 검색 버튼 (Search 아이콘)
+  - [x] 추가 네비게이션 옵션
+    - [x] 통계 페이지 링크 (BarChart3 아이콘)
+    - [x] 북마크 페이지 링크 (SignedIn 조건부, Bookmark 아이콘)
+  - [x] 메타데이터 설정
+    - [x] title: "404 - 페이지를 찾을 수 없습니다 | My Trip"
+    - [x] description: "요청하신 페이지를 찾을 수 없습니다."
+    - [x] robots: `noindex, nofollow` (404 페이지는 검색 엔진에 인덱싱하지 않음)
+  - [x] 기존 `app/places/[contentId]/not-found.tsx`와 디자인 일관성 유지
+    - [x] 동일한 아이콘 스타일 (destructive 색상, rounded-full 배경)
+    - [x] 동일한 버튼 스타일 및 레이아웃
+  - [x] 접근성 개선
+    - [x] 모든 링크 및 버튼에 `aria-label` 추가
+    - [x] 아이콘에 `aria-hidden="true"` 추가
+    - [x] 시맨틱 HTML 사용
 - [ ] SEO 최적화
   - [ ] 메타태그 설정 (`app/layout.tsx`)
     - [ ] 기본 title, description
