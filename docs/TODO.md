@@ -630,10 +630,33 @@
     - [x] `components/tour-detail/detail-info.tsx`
     - [x] `components/tour-detail/image-gallery-client.tsx` (메인 이미지, 썸네일)
     - [x] `components/tour-detail/image-modal.tsx`
-- [ ] 전역 에러 핸들링
-  - [ ] `app/error.tsx` 생성
-  - [ ] `app/global-error.tsx` 생성
-  - [ ] API 에러 처리 개선
+- [x] 전역 에러 핸들링
+  - [x] `app/error.tsx` 생성
+  - [x] `app/global-error.tsx` 생성
+  - [x] API 에러 처리 개선
+  ***
+  추가 개발 사항:
+  - [x] `app/error.tsx` 생성 (라우트 세그먼트 에러 처리, Client Component)
+    - [x] Next.js 15 Error Boundary 패턴 구현
+    - [x] 에러 타입별 분기 처리 (TourApiError, 네트워크 에러, 인증 에러, 데이터베이스 에러)
+    - [x] 사용자 친화적인 에러 UI (아이콘, 메시지, 재시도 버튼, 홈으로 돌아가기)
+    - [x] 개발 환경에서 에러 상세 정보 표시 (에러 이름, 메시지, digest, 스택 트레이스)
+    - [x] 접근성 개선 (ARIA 라벨, role="alert", aria-live)
+  - [x] `app/global-error.tsx` 생성 (루트 레이아웃 에러 처리)
+    - [x] `<html>`, `<body>` 태그 포함 (layout.tsx를 대체)
+    - [x] 최소한의 레이아웃 구조 및 에러 UI 구현
+    - [x] 개발 환경에서 에러 상세 정보 표시
+  - [x] `lib/utils/error-logger.ts` 생성 (에러 로깅 유틸리티)
+    - [x] `collectErrorInfo()` 함수: 에러 정보 수집 및 구조화
+    - [x] `logError()` 함수: 개발/프로덕션 환경별 에러 로깅
+    - [x] `logGlobalError()` 함수: 글로벌 에러 로깅
+    - [x] `logRouteError()` 함수: 라우트 세그먼트 에러 로깅
+    - [x] 프로덕션 환경 외부 로깅 서비스 연동 준비 (TODO 주석)
+  - [x] 에러 타입별 사용자 안내 메시지 개선
+    - [x] API 에러: 데이터 불러오기 문제 안내
+    - [x] 네트워크 에러: 인터넷 연결 확인 안내
+    - [x] 인증 에러: 로그인 다시 시도 안내
+    - [x] 데이터베이스 에러: 데이터베이스 연결 문제 안내
 - [ ] 404 페이지
   - [ ] `app/not-found.tsx` 생성
     - [ ] 사용자 친화적인 메시지
