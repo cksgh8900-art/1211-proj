@@ -23,6 +23,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatsSummary } from "@/components/stats/stats-summary";
+import { RegionChart } from "@/components/stats/region-chart";
 
 /**
  * 페이지 메타데이터
@@ -97,8 +99,7 @@ export default function StatsPage() {
         aria-label="통계 요약"
       >
         <Suspense fallback={<StatsSummarySkeleton />}>
-          {/* 추후 StatsSummary 컴포넌트가 들어갈 자리 */}
-          <StatsSummarySkeleton />
+          <StatsSummary />
         </Suspense>
       </section>
 
@@ -108,8 +109,7 @@ export default function StatsPage() {
         aria-label="지역별 관광지 분포"
       >
         <Suspense fallback={<ChartSkeleton />}>
-          {/* 추후 RegionChart 컴포넌트가 들어갈 자리 */}
-          <ChartSkeleton />
+          <RegionChart />
         </Suspense>
       </section>
 
