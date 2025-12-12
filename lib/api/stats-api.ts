@@ -24,6 +24,7 @@
  * - 부분 데이터 반환 허용
  */
 
+import { unstable_cache } from "next/cache";
 import { getAreaBasedList } from "@/lib/api/tour-api";
 import type { RegionStats, TypeStats, StatsSummary } from "@/lib/types/stats";
 import { AREA_CODE_NAME, CONTENT_TYPE_NAME } from "@/lib/types/stats";
@@ -44,52 +45,61 @@ import type { ContentTypeId } from "@/lib/types/tour";
  * ```
  */
 export async function getRegionStats(): Promise<RegionStats[]> {
-  const areaCodes = Object.keys(AREA_CODE_NAME);
+  return unstable_cache(
+    async () => {
+      const areaCodes = Object.keys(AREA_CODE_NAME);
 
-  // 개발 환경에서 시작 시간 측정
-  const startTime = process.env.NODE_ENV === "development" ? Date.now() : undefined;
+      // 개발 환경에서 시작 시간 측정
+      const startTime = process.env.NODE_ENV === "development" ? Date.now() : undefined;
 
-  const results = await Promise.all(
-    areaCodes.map(async (areaCode) => {
-      try {
-        const result = await getAreaBasedList({
-          areaCode,
-          numOfRows: 1, // totalCount만 필요하므로 최소값 설정
-          pageNo: 1,
-        });
+      const results = await Promise.all(
+        areaCodes.map(async (areaCode) => {
+          try {
+            const result = await getAreaBasedList({
+              areaCode,
+              numOfRows: 1, // totalCount만 필요하므로 최소값 설정
+              pageNo: 1,
+            });
 
-        return {
-          areaCode,
-          areaName: AREA_CODE_NAME[areaCode],
-          count: result.totalCount,
-        } as RegionStats;
-      } catch (error) {
-        // 개별 지역 조회 실패 시 로그 기록하고 null 반환
-        if (process.env.NODE_ENV === "development") {
-          console.error(
-            `[getRegionStats] 지역 통계 조회 실패 (${areaCode}, ${AREA_CODE_NAME[areaCode]}):`,
-            error instanceof Error ? error.message : error
-          );
-        }
-        return null;
+            return {
+              areaCode,
+              areaName: AREA_CODE_NAME[areaCode],
+              count: result.totalCount,
+            } as RegionStats;
+          } catch (error) {
+            // 개별 지역 조회 실패 시 로그 기록하고 null 반환
+            if (process.env.NODE_ENV === "development") {
+              console.error(
+                `[getRegionStats] 지역 통계 조회 실패 (${areaCode}, ${AREA_CODE_NAME[areaCode]}):`,
+                error instanceof Error ? error.message : error
+              );
+            }
+            return null;
+          }
+        })
+      );
+
+      // null 값 제거 및 타입 안전성 보장
+      const validResults = results.filter(
+        (r): r is RegionStats => r !== null
+      );
+
+      // 개발 환경에서 성능 로깅
+      if (startTime && process.env.NODE_ENV === "development") {
+        const duration = Date.now() - startTime;
+        console.log(
+          `[getRegionStats] 완료: ${validResults.length}/${areaCodes.length} 지역, 소요 시간: ${duration}ms`
+        );
       }
-    })
-  );
 
-  // null 값 제거 및 타입 안전성 보장
-  const validResults = results.filter(
-    (r): r is RegionStats => r !== null
-  );
-
-  // 개발 환경에서 성능 로깅
-  if (startTime && process.env.NODE_ENV === "development") {
-    const duration = Date.now() - startTime;
-    console.log(
-      `[getRegionStats] 완료: ${validResults.length}/${areaCodes.length} 지역, 소요 시간: ${duration}ms`
-    );
-  }
-
-  return validResults;
+      return validResults;
+    },
+    ["region-stats"],
+    {
+      revalidate: 3600, // 1시간
+      tags: ["stats", "region"],
+    }
+  )();
 }
 
 /**
@@ -107,74 +117,83 @@ export async function getRegionStats(): Promise<RegionStats[]> {
  * ```
  */
 export async function getTypeStats(): Promise<TypeStats[]> {
-  const contentTypeIds = Object.keys(CONTENT_TYPE_NAME);
+  return unstable_cache(
+    async () => {
+      const contentTypeIds = Object.keys(CONTENT_TYPE_NAME);
 
-  // 개발 환경에서 시작 시간 측정
-  const startTime = process.env.NODE_ENV === "development" ? Date.now() : undefined;
+      // 개발 환경에서 시작 시간 측정
+      const startTime = process.env.NODE_ENV === "development" ? Date.now() : undefined;
 
-  const results = await Promise.all(
-    contentTypeIds.map(async (contentTypeId) => {
-      try {
-        const result = await getAreaBasedList({
-          contentTypeId: contentTypeId as ContentTypeId,
-          numOfRows: 1, // totalCount만 필요하므로 최소값 설정
-          pageNo: 1,
-        });
+      const results = await Promise.all(
+        contentTypeIds.map(async (contentTypeId) => {
+          try {
+            const result = await getAreaBasedList({
+              contentTypeId: contentTypeId as ContentTypeId,
+              numOfRows: 1, // totalCount만 필요하므로 최소값 설정
+              pageNo: 1,
+            });
 
-        // 개발 환경에서 디버깅 로그
-        if (process.env.NODE_ENV === "development") {
-          console.log(
-            `[getTypeStats] 타입 ${contentTypeId} (${CONTENT_TYPE_NAME[contentTypeId]}): totalCount=${result.totalCount}`
-          );
-        }
+            // 개발 환경에서 디버깅 로그
+            if (process.env.NODE_ENV === "development") {
+              console.log(
+                `[getTypeStats] 타입 ${contentTypeId} (${CONTENT_TYPE_NAME[contentTypeId]}): totalCount=${result.totalCount}`
+              );
+            }
 
-        return {
-          contentTypeId: contentTypeId as ContentTypeId,
-          typeName: CONTENT_TYPE_NAME[contentTypeId],
-          count: result.totalCount || 0,
-        } as TypeStats;
-      } catch (error) {
-        // 개별 타입 조회 실패 시 로그 기록하고 null 반환
-        if (process.env.NODE_ENV === "development") {
-          console.error(
-            `[getTypeStats] 타입 통계 조회 실패 (${contentTypeId}, ${CONTENT_TYPE_NAME[contentTypeId]}):`,
-            error instanceof Error ? error.message : error
-          );
-        }
-        return null;
+            return {
+              contentTypeId: contentTypeId as ContentTypeId,
+              typeName: CONTENT_TYPE_NAME[contentTypeId],
+              count: result.totalCount || 0,
+            } as TypeStats;
+          } catch (error) {
+            // 개별 타입 조회 실패 시 로그 기록하고 null 반환
+            if (process.env.NODE_ENV === "development") {
+              console.error(
+                `[getTypeStats] 타입 통계 조회 실패 (${contentTypeId}, ${CONTENT_TYPE_NAME[contentTypeId]}):`,
+                error instanceof Error ? error.message : error
+              );
+            }
+            return null;
+          }
+        })
+      );
+
+      // null 값 제거 및 타입 안전성 보장
+      const validResults = results.filter((r): r is TypeStats => r !== null);
+
+      // 전체 개수 계산
+      const totalCount = validResults.reduce((sum, r) => sum + r.count, 0);
+
+      // 개발 환경에서 디버깅 로그
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          `[getTypeStats] 각 타입별 count:`,
+          validResults.map((r) => `${r.typeName}=${r.count}`).join(", ")
+        );
       }
-    })
-  );
 
-  // null 값 제거 및 타입 안전성 보장
-  const validResults = results.filter((r): r is TypeStats => r !== null);
+      // 백분율 계산
+      const resultsWithPercentage = validResults.map((r) => ({
+        ...r,
+        percentage: totalCount > 0 ? (r.count / totalCount) * 100 : 0,
+      }));
 
-  // 전체 개수 계산
-  const totalCount = validResults.reduce((sum, r) => sum + r.count, 0);
+      // 개발 환경에서 성능 로깅
+      if (startTime && process.env.NODE_ENV === "development") {
+        const duration = Date.now() - startTime;
+        console.log(
+          `[getTypeStats] 완료: ${validResults.length}/${contentTypeIds.length} 타입, 전체 개수: ${totalCount}, 소요 시간: ${duration}ms`
+        );
+      }
 
-  // 개발 환경에서 디버깅 로그
-  if (process.env.NODE_ENV === "development") {
-    console.log(
-      `[getTypeStats] 각 타입별 count:`,
-      validResults.map((r) => `${r.typeName}=${r.count}`).join(", ")
-    );
-  }
-
-  // 백분율 계산
-  const resultsWithPercentage = validResults.map((r) => ({
-    ...r,
-    percentage: totalCount > 0 ? (r.count / totalCount) * 100 : 0,
-  }));
-
-  // 개발 환경에서 성능 로깅
-  if (startTime && process.env.NODE_ENV === "development") {
-    const duration = Date.now() - startTime;
-    console.log(
-      `[getTypeStats] 완료: ${validResults.length}/${contentTypeIds.length} 타입, 전체 개수: ${totalCount}, 소요 시간: ${duration}ms`
-    );
-  }
-
-  return resultsWithPercentage;
+      return resultsWithPercentage;
+    },
+    ["type-stats"],
+    {
+      revalidate: 3600, // 1시간
+      tags: ["stats", "type"],
+    }
+  )();
 }
 
 /**
@@ -202,50 +221,59 @@ export async function getTypeStats(): Promise<TypeStats[]> {
  * ```
  */
 export async function getStatsSummary(): Promise<StatsSummary> {
-  // 개발 환경에서 시작 시간 측정
-  const startTime = process.env.NODE_ENV === "development" ? Date.now() : undefined;
+  return unstable_cache(
+    async () => {
+      // 개발 환경에서 시작 시간 측정
+      const startTime = process.env.NODE_ENV === "development" ? Date.now() : undefined;
 
-  try {
-    // 병렬로 지역별 통계와 타입별 통계 수집
-    const [regionStats, typeStats] = await Promise.all([
-      getRegionStats(),
-      getTypeStats(),
-    ]);
+      try {
+        // 병렬로 지역별 통계와 타입별 통계 수집
+        const [regionStats, typeStats] = await Promise.all([
+          getRegionStats(),
+          getTypeStats(),
+        ]);
 
-    // 전체 관광지 수 계산 (타입별 개수의 합계)
-    const totalCount = typeStats.reduce((sum, stat) => sum + stat.count, 0);
+        // 전체 관광지 수 계산 (타입별 개수의 합계)
+        const totalCount = typeStats.reduce((sum, stat) => sum + stat.count, 0);
 
-    // Top 3 지역: count 내림차순 정렬 후 상위 3개
-    const topRegions = [...regionStats]
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
+        // Top 3 지역: count 내림차순 정렬 후 상위 3개
+        const topRegions = [...regionStats]
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3);
 
-    // Top 3 타입: count 내림차순 정렬 후 상위 3개
-    const topTypes = [...typeStats]
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
+        // Top 3 타입: count 내림차순 정렬 후 상위 3개
+        const topTypes = [...typeStats]
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3);
 
-    const summary: StatsSummary = {
-      totalCount,
-      topRegions,
-      topTypes,
-      lastUpdated: new Date(),
-    };
+        const summary: StatsSummary = {
+          totalCount,
+          topRegions,
+          topTypes,
+          lastUpdated: new Date(),
+        };
 
-    // 개발 환경에서 성능 로깅
-    if (startTime && process.env.NODE_ENV === "development") {
-      const duration = Date.now() - startTime;
-      console.log(
-        `[getStatsSummary] 완료: 전체 개수 ${totalCount}, Top 3 지역/타입, 소요 시간: ${duration}ms`
-      );
+        // 개발 환경에서 성능 로깅
+        if (startTime && process.env.NODE_ENV === "development") {
+          const duration = Date.now() - startTime;
+          console.log(
+            `[getStatsSummary] 완료: 전체 개수 ${totalCount}, Top 3 지역/타입, 소요 시간: ${duration}ms`
+          );
+        }
+
+        return summary;
+      } catch (error) {
+        // 전체 실패 시 에러 throw
+        const errorMessage =
+          error instanceof Error ? error.message : "알 수 없는 오류";
+        throw new Error(`통계 요약 정보 수집 실패: ${errorMessage}`);
+      }
+    },
+    ["stats-summary"],
+    {
+      revalidate: 3600, // 1시간
+      tags: ["stats", "summary"],
     }
-
-    return summary;
-  } catch (error) {
-    // 전체 실패 시 에러 throw
-    const errorMessage =
-      error instanceof Error ? error.message : "알 수 없는 오류";
-    throw new Error(`통계 요약 정보 수집 실패: ${errorMessage}`);
-  }
+  )();
 }
 

@@ -132,9 +132,10 @@ export function ImageModal({
                     blurDataURL={getBlurDataURL()}
                   />
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                  </SwiperSlide>
+                ))}
+                </Swiper>
+              )}
 
           {/* 커스텀 네비게이션 버튼 */}
           {images.length > 1 && (

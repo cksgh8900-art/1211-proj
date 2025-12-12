@@ -14,10 +14,25 @@
  * - lucide-react: BarChart3
  */
 
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { BarChart3 } from "lucide-react";
 import { getRegionStats } from "@/lib/api/stats-api";
-import { RegionChartClient } from "./region-chart-client";
 import { ErrorMessage } from "@/components/ui/error";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// 차트 컴포넌트 동적 import (클라이언트 전용)
+const RegionChartClient = dynamic(
+  () => import("./region-chart-client").then((mod) => mod.RegionChartClient),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-64 md:h-96 w-full">
+        <Skeleton className="h-full w-full" />
+      </div>
+    ),
+  }
+);
 
 /**
  * 지역별 분포 차트 메인 컴포넌트 (Server Component)
@@ -54,7 +69,15 @@ export async function RegionChart() {
 
         {/* 차트 */}
         <div className="w-full" aria-label={`${data.length}개 지역의 관광지 분포`}>
-          <RegionChartClient data={data} />
+          <Suspense
+            fallback={
+              <div className="h-64 md:h-96 w-full">
+                <Skeleton className="h-full w-full" />
+              </div>
+            }
+          >
+            <RegionChartClient data={data} />
+          </Suspense>
         </div>
       </article>
     );

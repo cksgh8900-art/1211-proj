@@ -17,10 +17,31 @@
  * - swiper/react: Swiper 컴포넌트
  */
 
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { getDetailImage } from "@/lib/api/tour-api";
 import type { TourImage } from "@/lib/types/tour";
 import { ErrorMessage } from "@/components/ui/error";
-import { ImageGalleryClient } from "./image-gallery-client";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// 이미지 갤러리 클라이언트 컴포넌트 동적 import (Swiper 포함)
+const ImageGalleryClient = dynamic(
+  () =>
+    import("./image-gallery-client").then((mod) => mod.ImageGalleryClient),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="space-y-4">
+        <Skeleton className="h-64 w-full" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-video w-full" />
+          ))}
+        </div>
+      </div>
+    ),
+  }
+);
 
 interface DetailGalleryProps {
   contentId: string;
@@ -58,7 +79,20 @@ export async function DetailGallery({ contentId }: DetailGalleryProps) {
         aria-label="이미지 갤러리"
       >
         <h2 className="text-2xl font-bold mb-4">이미지 갤러리</h2>
-        <ImageGalleryClient images={processedImages} />
+        <Suspense
+          fallback={
+            <div className="space-y-4">
+              <Skeleton className="h-64 w-full" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="aspect-video w-full" />
+                ))}
+              </div>
+            </div>
+          }
+        >
+          <ImageGalleryClient images={processedImages} />
+        </Suspense>
       </section>
     );
   } catch (error) {

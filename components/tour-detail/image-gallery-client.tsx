@@ -17,14 +17,37 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import Image from "next/image";
-import { Swiper, SwiperSlide } from "swiper/react";
+import dynamic from "next/dynamic";
 import type { Swiper as SwiperType } from "swiper";
-import "swiper/css";
 import type { TourImage } from "@/lib/types/tour";
-import { ImageModal } from "./image-modal";
 import { getBlurDataURL } from "@/lib/utils/image";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Swiper 컴포넌트 동적 import
+const Swiper = dynamic(
+  () => import("swiper/react").then((mod) => mod.Swiper),
+  { ssr: false }
+);
+const SwiperSlide = dynamic(
+  () => import("swiper/react").then((mod) => mod.SwiperSlide),
+  { ssr: false }
+);
+
+// Swiper CSS 동적 import
+if (typeof window !== "undefined") {
+  import("swiper/css");
+}
+
+// ImageModal 동적 import
+const ImageModal = dynamic(
+  () => import("./image-modal").then((mod) => mod.ImageModal),
+  {
+    ssr: false,
+    loading: () => null, // 모달은 필요할 때만 로드되므로 로딩 UI 불필요
+  }
+);
 
 interface ImageGalleryClientProps {
   images: TourImage[];
@@ -90,8 +113,9 @@ export function ImageGalleryClient({ images }: ImageGalleryClientProps) {
                 />
                 </div>
               </SwiperSlide>
-            ))}
-          </Swiper>
+                ))}
+            </Swiper>
+          </Suspense>
         ) : (
           <div
             className="relative w-full h-full"

@@ -14,10 +14,25 @@
  * - lucide-react: PieChart
  */
 
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { PieChart } from "lucide-react";
 import { getTypeStats } from "@/lib/api/stats-api";
-import { TypeChartClient } from "./type-chart-client";
 import { ErrorMessage } from "@/components/ui/error";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// 차트 컴포넌트 동적 import (클라이언트 전용)
+const TypeChartClient = dynamic(
+  () => import("./type-chart-client").then((mod) => mod.TypeChartClient),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-64 md:h-96 w-full">
+        <Skeleton className="h-full w-full" />
+      </div>
+    ),
+  }
+);
 
 /**
  * 타입별 분포 차트 메인 컴포넌트 (Server Component)
@@ -54,7 +69,15 @@ export async function TypeChart() {
 
         {/* 차트 */}
         <div className="w-full" aria-label={`${data.length}개 타입의 관광지 분포`}>
-          <TypeChartClient data={data} />
+          <Suspense
+            fallback={
+              <div className="h-64 md:h-96 w-full">
+                <Skeleton className="h-full w-full" />
+              </div>
+            }
+          >
+            <TypeChartClient data={data} />
+          </Suspense>
         </div>
       </article>
     );

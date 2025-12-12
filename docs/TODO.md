@@ -715,11 +715,35 @@
     - [x] Sitemap URL 설정 (환경변수 `NEXT_PUBLIC_SITE_URL` 사용)
   - [x] `.env.example` 파일 생성
     - [x] `NEXT_PUBLIC_SITE_URL` 환경변수 추가 (설명 포함)
-- [ ] 성능 최적화
+- [x] 성능 최적화
+  - [x] API 응답 캐싱 전략 적용
+    - [x] 통계 API 캐싱 (unstable_cache, revalidate: 3600)
+    - [x] 관광지 API 캐싱 (fetch next.revalidate, revalidate: 3600-86400)
+    - [x] Sitemap 캐싱 (unstable_cache, revalidate: 86400)
+  - [x] 코드 분할 및 동적 Import
+    - [x] Swiper 라이브러리 동적 import (image-gallery-client, image-modal)
+    - [x] Recharts 라이브러리 동적 import (region-chart, type-chart)
+    - [x] Naver Map 컴포넌트 동적 import (list-map-view)
+  - [x] 번들 분석 설정
+    - [x] @next/bundle-analyzer 패키지 설치
+    - [x] next.config.ts에 번들 분석 설정 추가
+    - [x] package.json에 analyze 스크립트 추가
+  - [x] 폰트 최적화
+    - [x] app/layout.tsx에 display: 'swap' 옵션 추가
   - [ ] Lighthouse 점수 측정 (목표: > 80)
-  - [ ] 코드 분할 확인
-  - [ ] 불필요한 번들 제거
-  - [ ] API 응답 캐싱 전략 확인
+    - [ ] 프로덕션 빌드 생성 및 측정
+    - [ ] 성능 개선 목표 달성 확인
+  ***
+  추가 개발 사항:
+  - [x] `lib/api/stats-api.ts`에 `unstable_cache` 적용 (getRegionStats, getTypeStats, getStatsSummary)
+  - [x] `lib/api/tour-api.ts`의 `fetchWithTimeout`에 Next.js 캐싱 옵션 지원 추가
+  - [x] `lib/api/tour-api.ts`의 모든 API 함수에 캐싱 적용 (getAreaCode, getAreaBasedList, getDetailCommon, getDetailIntro, getDetailImage, getDetailPetTour)
+  - [x] `app/sitemap.ts`에 `unstable_cache` 적용
+  - [x] `components/stats/region-chart.tsx`와 `type-chart.tsx`에 차트 컴포넌트 동적 import 적용
+  - [x] `components/tour-detail/detail-gallery.tsx`에 이미지 갤러리 동적 import 적용
+  - [x] `components/tour-detail/image-gallery-client.tsx`에 Swiper 동적 import 적용
+  - [x] `components/list-map-view.tsx`에 Naver Map 동적 import 적용
+  - [x] 작업 완료 보고서 작성 (`docs/task/20250101-phase6-performance-optimization.md`)
 - [ ] 환경변수 보안 검증
   - [ ] 모든 필수 환경변수 확인
   - [ ] `.env.example` 업데이트

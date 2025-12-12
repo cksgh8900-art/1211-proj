@@ -14,10 +14,21 @@
  */
 
 import { useState, useEffect, useCallback, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { TourItem } from "@/lib/types/tour";
-import { NaverMap } from "./naver-map";
 import { TourList } from "./tour-list";
+import { Skeleton } from "./ui/skeleton";
+
+// Naver Map 컴포넌트 동적 import (클라이언트 전용)
+const NaverMap = dynamic(() => import("./naver-map").then((mod) => mod.NaverMap), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[300px] md:h-[500px] lg:h-[600px]">
+      <Skeleton className="h-full w-full" />
+    </div>
+  ),
+});
 import { TourPagination, type PaginationMode } from "./tour-pagination";
 import { Button } from "./ui/button";
 import { List, Map as MapIcon } from "lucide-react";

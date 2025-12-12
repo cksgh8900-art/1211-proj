@@ -134,16 +134,20 @@ function getRetryDelay(attempt: number): number {
  */
 async function fetchWithTimeout(
   url: string,
-  options: RequestInit = {},
+  options: RequestInit & { next?: { revalidate?: number; tags?: string[] } } = {},
   timeout: number = API_TIMEOUT
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
+    // Next.js 캐싱 옵션 추출
+    const { next, ...fetchOptions } = options;
+    
     const response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       signal: controller.signal,
+      next: next, // Next.js 캐싱 옵션 전달
     });
     clearTimeout(timeoutId);
     return response;
@@ -166,7 +170,8 @@ async function fetchWithTimeout(
 async function callApiWithRetry<T>(
   endpoint: string,
   params: Record<string, string | number | undefined>,
-  retries: number = MAX_RETRIES
+  retries: number = MAX_RETRIES,
+  cacheOptions?: { revalidate?: number; tags?: string[] }
 ): Promise<T> {
   const commonParams = getCommonParams();
   const queryParams = new URLSearchParams({
@@ -274,7 +279,8 @@ async function callApiWithRetry<T>(
 async function callApiWithRetryAndCount<T>(
   endpoint: string,
   params: Record<string, string | number | undefined>,
-  retries: number = MAX_RETRIES
+  retries: number = MAX_RETRIES,
+  cacheOptions?: { revalidate?: number; tags?: string[] }
 ): Promise<{ items: T[]; totalCount: number }> {
   const commonParams = getCommonParams();
   const queryParams = new URLSearchParams({
@@ -292,7 +298,9 @@ async function callApiWithRetryAndCount<T>(
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const response = await fetchWithTimeout(url);
+      const response = await fetchWithTimeout(url, {
+        next: cacheOptions,
+      });
 
       if (!response.ok) {
         throw new TourApiError(
@@ -430,16 +438,27 @@ export async function getAreaCode(
 export async function getAreaBasedList(
   params: AreaBasedListParams
 ): Promise<{ items: TourItem[]; totalCount: number }> {
-  return await callApiWithRetryAndCount<TourItem>("/areaBasedList2", {
-    areaCode: params.areaCode,
-    contentTypeId: params.contentTypeId,
-    sigunguCode: params.sigunguCode,
-    cat1: params.cat1,
-    cat2: params.cat2,
-    cat3: params.cat3,
-    numOfRows: params.numOfRows || 10,
-    pageNo: params.pageNo || 1,
-  });
+  // 캐시 키 생성 (파라미터 기반)
+  const cacheKey = `area-based-list-${params.areaCode || "all"}-${params.contentTypeId || "all"}-${params.pageNo || 1}`;
+  
+  return await callApiWithRetryAndCount<TourItem>(
+    "/areaBasedList2",
+    {
+      areaCode: params.areaCode,
+      contentTypeId: params.contentTypeId,
+      sigunguCode: params.sigunguCode,
+      cat1: params.cat1,
+      cat2: params.cat2,
+      cat3: params.cat3,
+      numOfRows: params.numOfRows || 10,
+      pageNo: params.pageNo || 1,
+    },
+    MAX_RETRIES,
+    {
+      revalidate: 3600, // 1시간
+      tags: ["tours", cacheKey],
+    }
+  );
 }
 
 /**
@@ -451,13 +470,19 @@ export async function getAreaBasedList(
 export async function searchKeyword(
   params: SearchKeywordParams
 ): Promise<{ items: TourItem[]; totalCount: number }> {
-  return await callApiWithRetryAndCount<TourItem>("/searchKeyword2", {
-    keyword: params.keyword,
-    areaCode: params.areaCode,
-    contentTypeId: params.contentTypeId,
-    numOfRows: params.numOfRows || 10,
-    pageNo: params.pageNo || 1,
-  });
+  // 검색 결과는 캐싱하지 않음 (동적이므로)
+  return await callApiWithRetryAndCount<TourItem>(
+    "/searchKeyword2",
+    {
+      keyword: params.keyword,
+      areaCode: params.areaCode,
+      contentTypeId: params.contentTypeId,
+      numOfRows: params.numOfRows || 10,
+      pageNo: params.pageNo || 1,
+    },
+    MAX_RETRIES
+    // 검색 결과는 캐싱하지 않음
+  );
 }
 
 /**
@@ -469,14 +494,22 @@ export async function searchKeyword(
 export async function getDetailCommon(
   params: DetailCommonParams
 ): Promise<TourDetail> {
-  const result = await callApiWithRetry<TourDetail>("/detailCommon2", {
-    contentId: params.contentId,
-    defaultYN: params.defaultYN || "Y",
-    firstImageYN: params.firstImageYN || "Y",
-    addrinfoYN: params.addrinfoYN || "Y",
-    mapinfoYN: params.mapinfoYN || "Y",
-    overviewYN: params.overviewYN || "Y",
-  });
+  const result = await callApiWithRetry<TourDetail>(
+    "/detailCommon2",
+    {
+      contentId: params.contentId,
+      defaultYN: params.defaultYN || "Y",
+      firstImageYN: params.firstImageYN || "Y",
+      addrinfoYN: params.addrinfoYN || "Y",
+      mapinfoYN: params.mapinfoYN || "Y",
+      overviewYN: params.overviewYN || "Y",
+    },
+    MAX_RETRIES,
+    {
+      revalidate: 86400, // 24시간 (상세 정보는 자주 변하지 않음)
+      tags: ["tour-detail", `detail-common-${params.contentId}`],
+    }
+  );
 
   // 단일 항목 반환
   const items = Array.isArray(result) ? result : [result];
@@ -498,10 +531,18 @@ export async function getDetailCommon(
 export async function getDetailIntro(
   params: DetailIntroParams
 ): Promise<TourIntro> {
-  const result = await callApiWithRetry<TourIntro>("/detailIntro2", {
-    contentId: params.contentId,
-    contentTypeId: params.contentTypeId,
-  });
+  const result = await callApiWithRetry<TourIntro>(
+    "/detailIntro2",
+    {
+      contentId: params.contentId,
+      contentTypeId: params.contentTypeId,
+    },
+    MAX_RETRIES,
+    {
+      revalidate: 86400, // 24시간
+      tags: ["tour-detail", `detail-intro-${params.contentId}-${params.contentTypeId}`],
+    }
+  );
 
   // 단일 항목 반환
   const items = Array.isArray(result) ? result : [result];
@@ -523,11 +564,19 @@ export async function getDetailIntro(
 export async function getDetailImage(
   params: DetailImageParams
 ): Promise<TourImage[]> {
-  const result = await callApiWithRetry<TourImage>("/detailImage2", {
-    contentId: params.contentId,
-    imageYN: params.imageYN || "Y",
-    subImageYN: params.subImageYN || "Y",
-  });
+  const result = await callApiWithRetry<TourImage>(
+    "/detailImage2",
+    {
+      contentId: params.contentId,
+      imageYN: params.imageYN || "Y",
+      subImageYN: params.subImageYN || "Y",
+    },
+    MAX_RETRIES,
+    {
+      revalidate: 86400, // 24시간
+      tags: ["tour-detail", `detail-image-${params.contentId}`],
+    }
+  );
 
   return Array.isArray(result) ? result : [result];
 }

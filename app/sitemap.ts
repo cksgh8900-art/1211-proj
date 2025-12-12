@@ -13,6 +13,7 @@
  */
 
 import type { MetadataRoute } from "next";
+import { unstable_cache } from "next/cache";
 import { getAreaBasedList } from "@/lib/api/tour-api";
 
 /**
@@ -50,33 +51,35 @@ function parseModifiedTime(dateString: string): Date {
  * 동적 Sitemap 생성
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://mytrip.example.com";
+  return unstable_cache(
+    async () => {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_SITE_URL || "https://mytrip.example.com";
 
-  // 정적 페이지
-  const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/stats`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/bookmarks`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-  ];
+      // 정적 페이지
+      const staticPages: MetadataRoute.Sitemap = [
+        {
+          url: baseUrl,
+          lastModified: new Date(),
+          changeFrequency: "weekly",
+          priority: 1.0,
+        },
+        {
+          url: `${baseUrl}/stats`,
+          lastModified: new Date(),
+          changeFrequency: "weekly",
+          priority: 0.8,
+        },
+        {
+          url: `${baseUrl}/bookmarks`,
+          lastModified: new Date(),
+          changeFrequency: "weekly",
+          priority: 0.7,
+        },
+      ];
 
-  // 동적 페이지 (관광지 상세페이지)
-  try {
+      // 동적 페이지 (관광지 상세페이지)
+      try {
     const dynamicPages: MetadataRoute.Sitemap = [];
     const tourMap = new Map<string, {
       url: string;
@@ -137,11 +140,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       console.log(`Sitemap 생성 완료: 정적 ${staticPages.length}개, 동적 ${dynamicPages.length}개`);
     }
 
-    return [...staticPages, ...dynamicPages];
-  } catch (error) {
-    // API 호출 실패 시 정적 페이지만 반환
-    console.error("Sitemap 생성 중 오류 발생:", error);
-    return staticPages;
-  }
+        return [...staticPages, ...dynamicPages];
+      } catch (error) {
+        // API 호출 실패 시 정적 페이지만 반환
+        console.error("Sitemap 생성 중 오류 발생:", error);
+        return staticPages;
+      }
+    },
+    ["sitemap"],
+    {
+      revalidate: 86400, // 24시간 (sitemap은 자주 변경되지 않음)
+      tags: ["sitemap"],
+    }
+  )();
 }
 
