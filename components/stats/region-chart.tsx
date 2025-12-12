@@ -67,6 +67,7 @@ export async function RegionChart() {
         message={errorMessage}
         type="api"
         title="지역별 통계 데이터를 불러올 수 없습니다"
+        defaultRetry={true}
       />
     );
   }

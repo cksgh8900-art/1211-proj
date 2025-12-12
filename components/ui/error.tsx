@@ -12,6 +12,7 @@ interface ErrorMessageProps {
   onRetry?: () => void;
   className?: string;
   autoDetectOffline?: boolean; // 오프라인 자동 감지 여부
+  defaultRetry?: boolean; // 기본 재시도 버튼 표시 여부 (onRetry가 없을 때)
 }
 
 const errorConfig = {
@@ -39,8 +40,22 @@ export function ErrorMessage({
   onRetry,
   className,
   autoDetectOffline = false,
+  defaultRetry = false,
 }: ErrorMessageProps) {
   const [isOffline, setIsOffline] = useState(false);
+
+  /**
+   * 기본 재시도 핸들러 (페이지 새로고침)
+   */
+  const handleDefaultRetry = () => {
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
+  };
+
+  // 재시도 함수 결정: onRetry가 있으면 사용, 없으면 defaultRetry가 true일 때 기본 재시도 사용
+  const retryHandler = onRetry || (defaultRetry ? handleDefaultRetry : undefined);
+  const showRetryButton = !!retryHandler;
 
   // 오프라인 감지 (autoDetectOffline이 true일 때만)
   useEffect(() => {
@@ -91,9 +106,9 @@ export function ErrorMessage({
           {displayMessage}
         </p>
       </div>
-      {onRetry && (
+      {showRetryButton && (
         <Button
-          onClick={onRetry}
+          onClick={retryHandler}
           variant="outline"
           size="sm"
           className="gap-2"

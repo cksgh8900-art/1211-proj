@@ -67,6 +67,7 @@ export async function TypeChart() {
         message={errorMessage}
         type="api"
         title="타입별 통계 데이터를 불러올 수 없습니다"
+        defaultRetry={true}
       />
     );
   }

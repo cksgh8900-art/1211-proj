@@ -207,6 +207,7 @@ export async function StatsSummary() {
         message={errorMessage}
         type="api"
         title="통계 데이터를 불러올 수 없습니다"
+        defaultRetry={true}
       />
     );
   }
