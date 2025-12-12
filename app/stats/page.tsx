@@ -25,6 +25,7 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsSummary } from "@/components/stats/stats-summary";
 import { RegionChart } from "@/components/stats/region-chart";
+import { TypeChart } from "@/components/stats/type-chart";
 
 /**
  * 페이지 메타데이터
@@ -119,8 +120,7 @@ export default function StatsPage() {
         aria-label="타입별 관광지 분포"
       >
         <Suspense fallback={<ChartSkeleton />}>
-          {/* 추후 TypeChart 컴포넌트가 들어갈 자리 */}
-          <ChartSkeleton />
+          <TypeChart />
         </Suspense>
       </section>
     </main>

@@ -505,23 +505,34 @@
   - [x] 차트 색상 설정 (hsl(var(--chart-1)) 사용)
   - [x] X축 레이블 회전 (45도 각도)
   - [x] Y축 숫자 포맷팅 (천 단위 구분자)
-- [ ] 타입별 분포 차트 (Donut Chart)
-  - [ ] `components/stats/type-chart.tsx` 생성
-    - [ ] shadcn/ui Chart 컴포넌트 설치 (Pie/Donut)
-    - [ ] recharts 기반 Donut Chart 구현
-    - [ ] 타입별 비율 (백분율)
-    - [ ] 타입별 개수 표시
-    - [ ] 섹션 클릭 시 해당 타입 목록 페이지로 이동
-    - [ ] 호버 시 타입명, 개수, 비율 표시
-    - [ ] 다크/라이트 모드 지원
-    - [ ] 반응형 디자인
-    - [ ] 로딩 상태
-    - [ ] 접근성 (ARIA 라벨)
+- [x] 타입별 분포 차트 (Donut Chart)
+  - [x] `components/stats/type-chart.tsx` 생성
+    - [x] shadcn/ui Chart 컴포넌트 설치 (Pie/Donut)
+    - [x] recharts 기반 Donut Chart 구현
+    - [x] 타입별 비율 (백분율)
+    - [x] 타입별 개수 표시
+    - [x] 섹션 클릭 시 해당 타입 목록 페이지로 이동
+    - [x] 호버 시 타입명, 개수, 비율 표시
+    - [x] 다크/라이트 모드 지원
+    - [x] 반응형 디자인
+    - [x] 로딩 상태
+    - [x] 접근성 (ARIA 라벨)
+  ***
+  추가 개발 사항:
+  - [x] `components/stats/type-chart-client.tsx` 생성 (Client Component, Donut Chart 렌더링)
+  - [x] Server Component와 Client Component 분리 (데이터 페칭과 차트 렌더링 분리)
+  - [x] PieChart, Pie, Cell 컴포넌트 사용 (recharts)
+  - [x] Donut Chart 구현 (innerRadius={60}, outerRadius={100})
+  - [x] 각 타입별 색상 차별화 (chart-1 ~ chart-5 순환 사용)
+  - [x] 섹션 클릭 이벤트 핸들러 구현 (useRouter 사용)
+  - [x] 커스텀 툴팁 구현 (타입명, 개수, 비율 표시)
+  - [x] 숫자 및 백분율 포맷팅 함수 구현
+  - [x] 데이터 정렬 (count 내림차순)
 - [ ] 페이지 통합
   - [x] `app/stats/page.tsx`에 모든 컴포넌트 통합
     - [x] 통계 요약 카드 (상단)
     - [x] 지역별 분포 차트 (중단)
-    - [ ] 타입별 분포 차트 (하단)
+    - [x] 타입별 분포 차트 (하단)
   - [ ] 에러 처리 (에러 메시지 + 재시도 버튼)
   - [ ] 네비게이션에 통계 페이지 링크 추가
   - [ ] 최종 페이지 확인
