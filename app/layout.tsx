@@ -45,6 +45,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     siteName: "My Trip",
+    images: [
+      {
+        url: `${
+          process.env.NEXT_PUBLIC_SITE_URL || "https://mytrip.example.com"
+        }/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "My Trip - 한국 관광지 정보 서비스",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",

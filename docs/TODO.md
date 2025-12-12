@@ -685,14 +685,36 @@
     - [x] 모든 링크 및 버튼에 `aria-label` 추가
     - [x] 아이콘에 `aria-hidden="true"` 추가
     - [x] 시맨틱 HTML 사용
-- [ ] SEO 최적화
-  - [ ] 메타태그 설정 (`app/layout.tsx`)
-    - [ ] 기본 title, description
-    - [ ] Open Graph 태그
-    - [ ] Twitter Card 태그
-  - [ ] `app/sitemap.ts` 생성
-    - [ ] 동적 sitemap 생성 (관광지 상세페이지 포함)
-  - [ ] `app/robots.ts` 생성
+- [x] SEO 최적화
+  - [x] 메타태그 설정 (`app/layout.tsx`)
+    - [x] 기본 title, description
+    - [x] Open Graph 태그
+    - [x] Twitter Card 태그
+  - [x] `app/sitemap.ts` 생성
+    - [x] 동적 sitemap 생성 (관광지 상세페이지 포함)
+  - [x] `app/robots.ts` 생성
+  ***
+  추가 개발 사항:
+  - [x] `app/page.tsx`에 홈페이지 메타데이터 추가
+    - [x] title: "한국 관광지 정보 서비스"
+    - [x] description, keywords, Open Graph, Twitter Card 설정
+  - [x] `app/layout.tsx`의 Open Graph에 이미지 추가
+    - [x] `public/og-image.png` 이미지 사용
+    - [x] 환경변수 `NEXT_PUBLIC_SITE_URL` 사용 (기본값 처리)
+    - [x] 이미지 크기 정보 (width: 1200, height: 630, alt)
+  - [x] `app/sitemap.ts` 생성 (동적 Sitemap)
+    - [x] 정적 페이지 URL 포함 (홈, 통계, 북마크)
+    - [x] 동적 페이지 URL 생성 (관광지 상세페이지)
+    - [x] 주요 지역 코드와 관광 타입별 병렬 API 호출
+    - [x] 중복 제거 (contentid 기준)
+    - [x] `lastModified`, `changeFrequency`, `priority` 설정
+    - [x] 에러 처리 (API 호출 실패 시 정적 페이지만 반환)
+  - [x] `app/robots.ts` 생성
+    - [x] User-agent: "\*", Allow: "/"
+    - [x] Disallow: "/api/\*", "/auth-test", "/storage-test"
+    - [x] Sitemap URL 설정 (환경변수 `NEXT_PUBLIC_SITE_URL` 사용)
+  - [x] `.env.example` 파일 생성
+    - [x] `NEXT_PUBLIC_SITE_URL` 환경변수 추가 (설명 포함)
 - [ ] 성능 최적화
   - [ ] Lighthouse 점수 측정 (목표: > 80)
   - [ ] 코드 분할 확인

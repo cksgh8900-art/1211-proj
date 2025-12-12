@@ -21,12 +21,47 @@
  * - lib/api/tour-api.ts: getAreaBasedList, getAreaCode
  */
 
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAreaBasedList, getAreaCode, searchKeyword } from "@/lib/api/tour-api";
 import type { TourItem } from "@/lib/types/tour";
 import { TourFilters } from "@/components/tour-filters";
 import { ListMapView } from "@/components/list-map-view";
 import { Skeleton } from "@/components/ui/skeleton";
+
+/**
+ * 홈페이지 메타데이터
+ */
+export const metadata: Metadata = {
+  title: "한국 관광지 정보 서비스",
+  description:
+    "전국 관광지 정보를 쉽게 검색하고 지도에서 확인하며 상세 정보를 조회할 수 있는 웹 서비스",
+  keywords: [
+    "관광",
+    "여행",
+    "한국",
+    "관광지",
+    "여행지",
+    "한국 여행",
+    "관광 정보",
+    "지도",
+    "검색",
+  ],
+  openGraph: {
+    title: "한국 관광지 정보 서비스 | My Trip",
+    description:
+      "전국 관광지 정보를 쉽게 검색하고 지도에서 확인하며 상세 정보를 조회할 수 있는 웹 서비스",
+    type: "website",
+    locale: "ko_KR",
+    siteName: "My Trip",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "한국 관광지 정보 서비스 | My Trip",
+    description:
+      "전국 관광지 정보를 쉽게 검색하고 지도에서 확인하며 상세 정보를 조회할 수 있는 웹 서비스",
+  },
+};
 
 /**
  * 필터 영역 로딩 Skeleton UI
