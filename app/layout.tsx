@@ -81,7 +81,7 @@ export default function RootLayout({
           {naverMapClientId && (
             <Script
               src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${naverMapClientId}`}
-              strategy="lazyOnload"
+              strategy="afterInteractive"
             />
           )}
         </body>

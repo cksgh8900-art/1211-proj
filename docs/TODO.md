@@ -559,29 +559,52 @@
   - [x] Supabase 보안 권고사항 확인 (RLS 비활성화 경고 - 의도된 설정)
   - [x] 검증 스크립트 작성 (scripts/verify-supabase-setup.ts)
   - [x] 확인 결과 문서화 (docs/task/20250101-phase5-supabase-setup-verification.md)
-- [ ] 북마크 목록 페이지
-  - [ ] `app/bookmarks/page.tsx` 생성
-    - [ ] 인증된 사용자만 접근 가능
-    - [ ] 로그인하지 않은 경우 로그인 유도
-  - [ ] `components/bookmarks/bookmark-list.tsx` 생성
-    - [ ] 사용자 북마크 목록 조회 (`getUserBookmarks()`)
-    - [ ] 카드 레이아웃 (홈페이지와 동일한 tour-card 사용)
-    - [ ] 빈 상태 처리 (북마크 없을 때)
-    - [ ] 로딩 상태 (Skeleton UI)
-- [ ] 북마크 관리 기능
-  - [ ] 정렬 옵션
-    - [ ] 최신순 (created_at DESC)
-    - [ ] 이름순 (가나다순)
-    - [ ] 지역별
-  - [ ] 일괄 삭제 기능
-    - [ ] 체크박스 선택
-    - [ ] 선택 항목 삭제
-    - [ ] 확인 다이얼로그
-  - [ ] 개별 삭제 기능
-    - [ ] 각 카드에 삭제 버튼
-- [ ] 페이지 통합 및 스타일링
-  - [ ] 반응형 디자인 확인
-  - [ ] 최종 페이지 확인
+- [x] 북마크 목록 페이지
+  - [x] `app/bookmarks/page.tsx` 생성
+    - [x] 인증된 사용자만 접근 가능
+    - [x] 로그인하지 않은 경우 로그인 유도
+  - [x] `components/bookmarks/bookmark-list.tsx` 생성
+    - [x] 사용자 북마크 목록 조회 (`getBookmarkedTours()`)
+    - [x] 카드 레이아웃 (홈페이지와 동일한 tour-card 사용)
+    - [x] 빈 상태 처리 (북마크 없을 때)
+    - [x] 로딩 상태 (Skeleton UI)
+  ***
+  추가 개발 사항:
+  - [x] `actions/bookmarks.ts`에 `getBookmarkedTours()` 함수 추가 (contentId 배열로 관광지 정보 병렬 조회)
+  - [x] `TourDetail`을 `TourItem` 형태로 변환하는 로직 구현
+  - [x] 북마크 생성일시(`created_at`) 정보 포함 (Map 형태로 전달)
+  - [x] 메타데이터 설정 (title, description, Open Graph, Twitter Card)
+  - [x] Suspense 경계 설정 (정렬 옵션, 북마크 목록)
+- [x] 북마크 관리 기능
+  - [x] 정렬 옵션
+    - [x] 최신순 (created_at DESC)
+    - [x] 이름순 (가나다순)
+    - [x] 지역별
+  - [x] 일괄 삭제 기능
+    - [x] 체크박스 선택
+    - [x] 선택 항목 삭제
+    - [x] 확인 다이얼로그
+  - [x] 개별 삭제 기능
+    - [x] 각 카드에 삭제 버튼
+  ***
+  추가 개발 사항:
+  - [x] `components/bookmarks/bookmark-sort.tsx` 생성 (정렬 옵션 UI, URL 쿼리 파라미터 관리)
+  - [x] `components/bookmarks/bookmark-delete-button.tsx` 생성 (개별 삭제 버튼, 확인 다이얼로그)
+  - [x] `components/bookmarks/bookmark-bulk-actions.tsx` 생성 (일괄 삭제 기능, 전체 선택/해제)
+  - [x] 클라이언트 사이드 정렬 로직 구현 (useMemo 사용)
+  - [x] 호버 시 체크박스 및 삭제 버튼 표시 (opacity 전환)
+  - [x] 삭제 후 페이지 새로고침 (`router.refresh()`)
+  - [x] 일괄 삭제 시 병렬 처리 및 에러 처리 (일부 실패해도 계속 진행)
+  - [x] 토스트 메시지 통합 (성공/실패 피드백)
+- [x] 페이지 통합 및 스타일링
+  - [x] 반응형 디자인 확인
+  - [x] 최종 페이지 확인
+  ***
+  추가 개발 사항:
+  - [x] 정렬 옵션 영역 Sticky 처리 (스크롤 시 상단 고정)
+  - [x] 일괄 삭제 액션 영역 통합 (북마크 목록 상단)
+  - [x] 접근성 개선 (ARIA 라벨, 시맨틱 HTML, role 속성)
+  - [x] 네비게이션 통합 확인 (Navbar에 이미 북마크 링크 존재)
 
 ## Phase 6: 최적화 & 배포
 

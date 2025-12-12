@@ -461,7 +461,7 @@ function ListMapViewInner({
             hoveredTourId={hoveredTourId}
             onMarkerClick={handleMarkerClick}
             onMarkerHover={handleMarkerHover}
-            className="h-[300px] md:h-[500px] lg:h-[600px]"
+            className="h-[300px] md:h-[500px] lg:h-[600px] w-full"
           />
         </div>
       </div>

@@ -158,3 +158,96 @@ export async function getUserBookmarks(): Promise<string[]> {
   return data.map((item) => item.content_id);
 }
 
+/**
+ * 북마크된 관광지의 상세 정보 조회
+ * 
+ * @returns 북마크된 관광지 목록 및 북마크 생성일시
+ */
+export async function getBookmarkedTours(): Promise<{
+  tours: import("@/lib/types/tour").TourItem[];
+  bookmarkDates: Map<string, string>;
+}> {
+  const userId = await getSupabaseUserId();
+  if (!userId) {
+    return { tours: [], bookmarkDates: new Map() };
+  }
+
+  const supabase = await createClient();
+  
+  // 북마크 목록 조회 (contentId와 created_at 포함)
+  const { data: bookmarks, error } = await supabase
+    .from("bookmarks")
+    .select("content_id, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error || !bookmarks || bookmarks.length === 0) {
+    if (error) {
+      console.error("북마크 목록 조회 실패:", error);
+    }
+    return { tours: [], bookmarkDates: new Map() };
+  }
+
+  // 북마크 생성일시 Map 생성
+  const bookmarkDates = new Map<string, string>();
+  bookmarks.forEach((bookmark) => {
+    bookmarkDates.set(bookmark.content_id, bookmark.created_at);
+  });
+
+  // 각 contentId에 대해 관광지 정보 조회 (병렬 처리)
+  const { getDetailCommon } = await import("@/lib/api/tour-api");
+  const tourPromises = bookmarks.map(async (bookmark) => {
+    try {
+      const detail = await getDetailCommon({
+        contentId: bookmark.content_id,
+        defaultYN: "Y",
+        firstImageYN: "Y",
+        addrinfoYN: "Y",
+        mapinfoYN: "Y",
+        overviewYN: "N", // 목록에서는 개요 불필요
+      });
+
+      // TourDetail을 TourItem 형태로 변환
+      const tourItem: import("@/lib/types/tour").TourItem = {
+        contentid: detail.contentid,
+        contenttypeid: detail.contenttypeid,
+        title: detail.title,
+        addr1: detail.addr1,
+        addr2: detail.addr2,
+        areacode: detail.areacode,
+        sigungucode: detail.sigungucode,
+        mapx: detail.mapx,
+        mapy: detail.mapy,
+        firstimage: detail.firstimage,
+        firstimage2: detail.firstimage2,
+        tel: detail.tel,
+        cat1: detail.cat1,
+        cat2: detail.cat2,
+        cat3: detail.cat3,
+        createdtime: detail.createdtime,
+        modifiedtime: detail.modifiedtime || detail.createdtime || "",
+        zipcode: detail.zipcode,
+        mlevel: detail.mlevel,
+      };
+
+      return tourItem;
+    } catch (err) {
+      console.error(
+        `관광지 정보 조회 실패 (contentId: ${bookmark.content_id}):`,
+        err
+      );
+      return null;
+    }
+  });
+
+  // 모든 Promise 실행 (일부 실패해도 계속 진행)
+  const tourResults = await Promise.all(tourPromises);
+  
+  // null 제거 (실패한 항목 필터링)
+  const tours = tourResults.filter(
+    (tour): tour is import("@/lib/types/tour").TourItem => tour !== null
+  );
+
+  return { tours, bookmarkDates };
+}
+

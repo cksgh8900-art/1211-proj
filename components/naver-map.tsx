@@ -22,7 +22,6 @@ import { convertKATECToWGS84, calculateCenter } from "@/lib/utils/coordinate";
 import { cn } from "@/lib/utils";
 import { MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ErrorMessage } from "@/components/ui/error";
 
 interface NaverMapProps {
   tours: TourItem[];
@@ -185,8 +184,10 @@ export function NaverMap({
         ) {
           setIsLoaded(true);
           setError(null);
+          return true;
         }
       }
+      return false;
     };
 
     // 환경변수 확인
@@ -199,47 +200,115 @@ export function NaverMap({
     }
 
     // 이미 로드되어 있는지 확인
-    checkNaverMaps();
-    
-    // 스크립트 로드 대기 (최대 10초)
+    if (checkNaverMaps()) {
+      return;
+    }
+
+    let interval: NodeJS.Timeout | null = null;
+    let observer: MutationObserver | null = null;
+    let timeout: NodeJS.Timeout | null = null;
+
+    // 스크립트 로드 대기 (최대 15초)
     let checkCount = 0;
-    const maxChecks = 100; // 10초 (100ms * 100)
-    const interval = setInterval(() => {
-      checkCount++;
-      checkNaverMaps();
-      
-      if (isLoaded || checkCount >= maxChecks) {
-        clearInterval(interval);
-        if (!isLoaded && checkCount >= maxChecks) {
+    const maxChecks = 150; // 15초 (100ms * 150)
+
+    const startChecking = () => {
+      if (interval) return; // 이미 체크 중이면 중복 실행 방지
+
+      interval = setInterval(() => {
+        checkCount++;
+        if (checkNaverMaps()) {
+          if (interval) clearInterval(interval);
+          if (observer) observer.disconnect();
+          if (timeout) clearTimeout(timeout);
+          interval = null;
+          return;
+        }
+
+        if (checkCount >= maxChecks) {
+          if (interval) clearInterval(interval);
+          if (observer) observer.disconnect();
+          if (timeout) clearTimeout(timeout);
+          interval = null;
           setError(
-            "네이버 지도를 불러올 수 없습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요."
+            "네이버 지도 API를 불러올 수 없습니다. API 키가 올바른지 확인하거나, 네이버 클라우드 플랫폼에서 도메인 등록을 확인해주세요."
           );
         }
-      }
-    }, 100);
-
-    // 스크립트 로드 이벤트 리스너 (스크립트가 동적으로 로드되는 경우)
-    const handleScriptLoad = () => {
-      checkNaverMaps();
+      }, 100);
     };
 
-    // window에 naver 객체가 추가될 때 감지
-    const observer = new MutationObserver(() => {
-      checkNaverMaps();
-    });
-
+    // MutationObserver로 스크립트 동적 로드 감지
     if (typeof window !== "undefined") {
+      observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          if (mutation.type === "childList") {
+            // 스크립트 태그가 추가되었는지 확인
+            const scriptTag = document.querySelector(
+              `script[src*="oapi.map.naver.com"]`
+            );
+            if (scriptTag && !interval) {
+              startChecking();
+            }
+            // naver 객체가 추가되었는지 확인
+            if (checkNaverMaps()) {
+              if (observer) observer.disconnect();
+              if (interval) clearInterval(interval);
+              if (timeout) clearTimeout(timeout);
+              return;
+            }
+          }
+        }
+      });
+
       observer.observe(document.head, {
+        childList: true,
+        subtree: true,
+      });
+
+      observer.observe(document.body, {
         childList: true,
         subtree: true,
       });
     }
 
-    return () => {
-      clearInterval(interval);
-      observer.disconnect();
+    // 전역 naver 객체 추가 감지 (window.naver가 동적으로 추가되는 경우)
+    const checkWindowNaver = () => {
+      if (checkNaverMaps()) {
+        if (observer) observer.disconnect();
+        if (interval) clearInterval(interval);
+        if (timeout) clearTimeout(timeout);
+        return;
+      }
     };
-  }, [isLoaded]);
+
+    // window 객체에 naver가 추가될 때 감지
+    const naverCheckInterval = setInterval(checkWindowNaver, 200);
+
+    // 타임아웃 설정
+    timeout = setTimeout(() => {
+      if (!isLoaded && checkCount < maxChecks) {
+        // 스크립트가 아직 로드되지 않았지만 타임아웃이 발생한 경우
+        const scriptTag = document.querySelector(
+          `script[src*="oapi.map.naver.com"]`
+        );
+        if (!scriptTag) {
+          setError(
+            "네이버 지도 API 스크립트를 찾을 수 없습니다. 페이지를 새로고침해주세요."
+          );
+        }
+      }
+    }, 5000);
+
+    // 초기 체크 시작
+    startChecking();
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (observer) observer.disconnect();
+      if (timeout) clearTimeout(timeout);
+      if (naverCheckInterval) clearInterval(naverCheckInterval);
+    };
+  }, []);
 
   // 지도 초기화
   useEffect(() => {
@@ -558,16 +627,32 @@ export function NaverMap({
     return (
       <div
         className={cn(
-          "flex items-center justify-center rounded-lg border",
+          "flex items-center justify-center rounded-lg border bg-muted/50",
           className
         )}
         style={{ minHeight: "400px" }}
       >
-        <ErrorMessage
-          message={error}
-          type="general"
-          onRetry={() => window.location.reload()}
-        />
+        <div className="text-center space-y-4 max-w-md px-4">
+          <div className="rounded-full bg-destructive/10 p-4 inline-block">
+            <MapPin className="h-8 w-8 text-destructive mx-auto" aria-hidden="true" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="font-semibold text-lg">지도를 불러올 수 없습니다</h3>
+            <p className="text-sm text-muted-foreground">{error}</p>
+            <p className="text-xs text-muted-foreground mt-4">
+              개발 환경에서는 네이버 지도 API 키 설정이 필요합니다.
+              <br />
+              API 키가 없어도 목록은 정상적으로 표시됩니다.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+          >
+            다시 시도
+          </Button>
+        </div>
       </div>
     );
   }
